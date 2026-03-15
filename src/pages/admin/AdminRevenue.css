@@ -1,0 +1,462 @@
+/* Admin Revenue Styles */
+
+.admin-revenue {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* Stats Grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+.stat-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+}
+
+.stat-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  background: rgba(217, 78, 40, 0.1);
+  color: var(--admin-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+}
+
+.stat-card.pending .stat-icon {
+  background: rgba(251, 146, 60, 0.1);
+  color: #fb923c;
+}
+
+.stat-card.confirmed .stat-icon {
+  background: rgba(34, 197, 94, 0.1);
+  color: #22c55e;
+}
+
+.stat-card.paid .stat-icon {
+  background: rgba(139, 92, 246, 0.1);
+  color: #8b5cf6;
+}
+
+.stat-card.revenue .stat-icon {
+  background: rgba(217, 78, 40, 0.1);
+  color: var(--admin-primary);
+}
+
+.stat-info h3 {
+  font-size: 1.5rem;
+  margin: 0;
+  color: var(--admin-text-main);
+  font-weight: 800;
+}
+
+.stat-info p {
+  margin: 0.25rem 0 0;
+  color: var(--admin-text-muted);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+/* Filters Bar */
+.filters-bar {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.search-box {
+  flex: 1;
+  min-width: 250px;
+  position: relative;
+}
+
+.search-box i {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 0.875rem 1rem 0.875rem 2.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  transition: border-color 0.2s ease;
+  box-sizing: border-box;
+  font-weight: 500;
+}
+
+.search-box input:focus {
+  outline: none;
+  border-color: var(--admin-primary);
+  box-shadow: 0 0 0 3px rgba(217, 78, 40, 0.1);
+}
+
+.filter-group select {
+  padding: 0.875rem 2rem 0.875rem 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  background: white;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  font-weight: 600;
+  color: var(--admin-text-main);
+}
+
+.filter-group select:focus {
+  outline: none;
+  border-color: var(--admin-primary);
+}
+
+/* Table */
+.table-container {
+  background: white;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  border: 1px solid var(--admin-border);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Custom Scrollbar */
+.table-container::-webkit-scrollbar {
+  height: 8px;
+}
+
+.table-container::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+  background: var(--admin-secondary);
+  border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+  background: #94c4a8;
+}
+
+.revenue-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 900px; /* Force horizontal scroll on smaller screens */
+}
+
+.revenue-table th {
+  background: #fcfcfc;
+  padding: 1.2rem 1.5rem;
+  text-align: left;
+  font-weight: 700;
+  color: #64748b;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-bottom: 2px solid #f1f5f9;
+}
+
+.revenue-table td {
+  padding: 1.2rem 1.5rem;
+  border-bottom: 1px solid #f1f5f9;
+  color: var(--admin-text-main);
+  font-weight: 500;
+}
+
+.revenue-table tbody tr:hover {
+  background: #fcfcfc;
+}
+
+.revenue-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.name-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 700;
+}
+
+.name-cell i {
+  color: #94a3b8;
+}
+
+.amount {
+  font-weight: 800;
+  color: #059669;
+}
+
+.reference {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+/* Status Badges */
+.status-badge {
+  display: inline-block;
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-pending {
+  background: rgba(251, 146, 60, 0.1);
+  color: #ea580c;
+}
+
+.status-confirmed {
+  background: rgba(34, 197, 94, 0.1);
+  color: #16a34a;
+}
+
+.status-paid {
+  background: rgba(139, 92, 246, 0.1);
+  color: #7c3aed;
+}
+
+/* Actions */
+.actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.action-buttons-wrapper {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.action-btn {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.action-btn.confirm {
+  background: rgba(34, 197, 94, 0.1);
+  color: #22c55e;
+}
+
+.action-btn.confirm:hover {
+  background: #22c55e;
+  color: white;
+  transform: translateY(-2px);
+}
+
+.action-btn.paid {
+  background: rgba(139, 92, 246, 0.1);
+  color: #8b5cf6;
+}
+
+.action-btn.paid:hover {
+  background: #8b5cf6;
+  color: white;
+  transform: translateY(-2px);
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 4rem !important;
+}
+
+.empty-state i {
+  font-size: 3rem;
+  color: #cbd5e1;
+  margin-bottom: 1.5rem;
+}
+
+.empty-state p {
+  color: #94a3b8;
+  margin: 0;
+  font-weight: 500;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .revenue-table {
+    min-width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-revenue {
+    gap: 1.5rem;
+    padding: 0;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  .stat-card {
+    padding: 1.25rem;
+    flex-direction: column;
+    text-align: center;
+    gap: 0.75rem;
+    border-radius: 20px;
+  }
+
+  .stat-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 1.2rem;
+  }
+
+  .stat-info h3 {
+    font-size: 1.35rem;
+  }
+
+  .stat-info p {
+    font-size: 0.8rem;
+  }
+
+  .filters-bar {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .search-box {
+    min-width: 100%;
+  }
+
+  .filter-group select {
+    width: 100%;
+  }
+
+  /* Table to Card Layout - Purely Vertical */
+  .table-container {
+    background: transparent;
+    box-shadow: none;
+    overflow-x: visible; /* Remove horizontal scroll */
+    border: none;
+  }
+
+  .revenue-table {
+    display: block;
+    min-width: 0; /* Remove min-width */
+  }
+
+  .revenue-table thead {
+    display: none;
+  }
+
+  .revenue-table tbody {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .revenue-table tr {
+    display: block;
+    background: white;
+    border-radius: 24px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    border: 1px solid #f1f5f9;
+    margin-bottom: 0;
+  }
+
+  .revenue-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.85rem 0;
+    border-bottom: 1px solid #f8fafc;
+    text-align: right;
+    min-height: 2.5rem;
+  }
+
+  .revenue-table td:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+    margin-top: 0.5rem;
+  }
+
+  .revenue-table td::before {
+    content: attr(data-label);
+    font-weight: 800;
+    color: #94a3b8;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    text-align: left;
+    margin-right: 1rem;
+    letter-spacing: 0.5px;
+  }
+
+  .name-cell {
+    justify-content: flex-end;
+    font-weight: 800;
+    color: var(--admin-text-main);
+  }
+
+  .amount {
+    font-size: 1.2rem;
+    color: var(--admin-primary);
+  }
+
+  .status-badge {
+    padding: 5px 12px;
+    font-size: 0.7rem;
+  }
+
+  .action-buttons-wrapper {
+    width: 100%;
+    justify-content: flex-end;
+    gap: 1rem;
+  }
+
+  .action-btn {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+}

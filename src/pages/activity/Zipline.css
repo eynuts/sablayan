@@ -640,38 +640,44 @@
 }
 
 @media (max-width: 768px) {
+  .section-container { padding: 0 1.5rem; }
+  
   .zv3-hero { min-height: 600px; }
   .zv3-hero-btns { flex-direction: column; width: 100%; max-width: 300px; margin: 0 auto; }
-  .zv3-hero-content h1 { font-size: 3.5rem; }
+  .zv3-hero-content h1 { font-size: 3.2rem; }
   .zv3-hero-content p { font-size: 1.1rem; }
   
-  .zv3-stats { padding: 3rem 0; }
+  .zv3-stats { padding: 4rem 0; }
+  .zv3-stats-grid { grid-template-columns: repeat(2, 1fr); gap: 2rem; }
   .zv3-stat-card { flex-direction: column; gap: 0.5rem; text-align: center; }
   
   .zv3-experience { padding: 6rem 0; }
-  .zv3-exp-text h2 { font-size: 2.5rem; }
+  .zv3-exp-text h2 { font-size: 2.5rem; margin-bottom: 1.5rem; }
+  .zv3-lead { font-size: 1.1rem; }
   
-  .zv3-img-main { height: 450px; border-radius: 30px; }
+  .zv3-img-main { height: 450px; border-radius: 30px; width: 100%; }
   .zv3-img-sub { 
-    height: 200px; 
-    bottom: -40px;
+    height: 180px; 
+    bottom: -30px;
     right: -10px;
-    width: 60%;
+    width: 55%;
     border-radius: 20px;
     border-width: 6px;
+    display: block;
   }
   
   .zv3-img-badge { 
     padding: 1.2rem; 
-    right: 20px; 
+    right: 15px; 
     top: auto;
     bottom: 20px; 
     border-radius: 20px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    min-width: 100px;
   }
   
-  .zv3-img-badge .val { font-size: 2.5rem; }
-  .zv3-img-badge .lbl { font-size: 0.6rem; }
+  .zv3-img-badge .val { font-size: 2.2rem; }
+  .zv3-img-badge .lbl { font-size: 0.55rem; }
   
   .zv3-rates { padding: 6rem 0; }
   .zv3-section-header h2 { font-size: 2.8rem; }
@@ -685,5 +691,8 @@
 
 @media (max-width: 480px) {
   .zv3-stats-grid { grid-template-columns: 1fr; }
-  .zv3-hero-content h1 { font-size: 3rem; }
+  .zv3-hero-content h1 { font-size: 2.8rem; }
+  .zv3-exp-text h2 { font-size: 2.2rem; }
+  .zv3-img-main { height: 400px; }
+  .zv3-img-sub { height: 150px; width: 60%; }
 }

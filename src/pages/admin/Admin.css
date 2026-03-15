@@ -1,0 +1,680 @@
+/* Admin Dashboard Styles */
+
+:root {
+  --admin-primary: #d94e28;
+  --admin-primary-dark: #bf3f1d;
+  --admin-secondary: #a8d5ba;
+  --admin-dark: #0a191f;
+  --admin-dark-light: #122b36;
+  --admin-sidebar-bg: #0a191f;
+  --admin-bg: #f8fbfb;
+  --admin-card-bg: #ffffff;
+  --admin-text-main: #122b36;
+  --admin-text-muted: #64748b;
+  --admin-border: rgba(0, 0, 0, 0.05);
+  --admin-sidebar-text: #94a3b8;
+  --admin-sidebar-active: #ffffff;
+}
+
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+  background: var(--admin-bg);
+  position: relative;
+}
+
+/* Floating menu button - only visible on desktop when sidebar is closed or on mobile */
+.floating-menu-btn {
+  position: fixed;
+  top: 1.5rem;
+  left: 1.5rem;
+  z-index: 2000;
+  background: var(--admin-card-bg);
+  border: none;
+  cursor: pointer;
+  padding: 0.75rem;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Hide floating button on desktop when sidebar is open */
+.admin-layout.sidebar-open .floating-menu-btn {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-20px);
+}
+
+.floating-menu-btn:hover {
+  background: #f1f5f9;
+  transform: scale(1.05);
+}
+
+/* Sidebar */
+.admin-sidebar {
+  width: 280px;
+  background: var(--admin-sidebar-bg);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  height: 100vh;
+  height: 100dvh; /* Use dynamic viewport height for mobile browsers */
+  transition: transform 0.3s ease;
+  z-index: 1000;
+  overflow: hidden;
+  padding-bottom: 80px; /* Make room for fixed exit button */
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.admin-sidebar.closed {
+  transform: translateX(-100%);
+}
+
+.admin-sidebar.open {
+  transform: translateX(0);
+}
+
+.admin-logo {
+  padding: 2rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.burger-menu {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  transition: background 0.3s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.burger-menu:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.burger-icon {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  width: 20px;
+  height: 16px;
+  position: relative;
+}
+
+.burger-icon span {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: var(--admin-primary);
+  border-radius: 2px;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.burger-icon span:first-child {
+  top: 0;
+}
+
+.burger-icon span:nth-child(2) {
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.burger-icon span:last-child {
+  bottom: 0;
+}
+
+/* Burger to X animation */
+.burger-icon.active span:first-child {
+  transform: translateY(7px) rotate(45deg);
+}
+
+.burger-icon.active span:nth-child(2) {
+  opacity: 0;
+}
+
+.burger-icon.active span:last-child {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+.admin-logo h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.5rem;
+  margin: 0;
+  color: var(--admin-primary);
+  font-weight: 800;
+}
+
+.admin-nav {
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem 1rem;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.admin-nav button {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  background: transparent;
+  border: none;
+  color: var(--admin-sidebar-text);
+  cursor: pointer;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  text-align: left;
+}
+
+.admin-nav button i {
+  width: 20px;
+  font-size: 1.1rem;
+}
+
+.admin-nav button:hover,
+.admin-nav button.active {
+  background: rgba(217, 78, 40, 0.1);
+  color: var(--admin-primary);
+}
+
+.admin-nav button.active {
+  background: var(--admin-primary);
+  color: white;
+  box-shadow: 0 10px 20px rgba(217, 78, 40, 0.2);
+}
+
+/* Exit button styling - FIXED POSITIONING */
+.admin-nav button.exit-btn {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: var(--admin-sidebar-bg); /* Match sidebar background */
+  color: #f87171;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1.25rem 1.5rem;
+  border-radius: 0;
+  margin: 0;
+  z-index: 10;
+  box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.admin-nav button.exit-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+}
+
+/* Main Content */
+.admin-main {
+  flex: 1;
+  margin-left: 280px;
+  padding: 2.5rem;
+  padding-left: 2.5rem; /* Adjusted from 5rem to avoid too much empty space */
+  box-sizing: border-box;
+  width: calc(100% - 280px);
+  transition: all 0.3s ease;
+  min-height: 100vh;
+}
+
+/* When sidebar is closed - use full width */
+.admin-layout.sidebar-closed .admin-main {
+  margin-left: 0;
+  width: 100%;
+  padding-left: 5rem; /* Space for floating button on desktop */
+}
+
+@media (max-width: 1024px) {
+  .admin-layout.sidebar-open .floating-menu-btn {
+    opacity: 1;
+    pointer-events: auto;
+    transform: none;
+  }
+
+  .admin-main {
+    margin-left: 0 !important;
+    width: 100% !important;
+    padding: 1.5rem !important;
+    padding-top: 5rem !important;
+  }
+
+  .admin-layout.sidebar-closed .admin-main {
+    padding-left: 1.5rem !important;
+  }
+
+  .admin-header {
+    padding: 1.25rem !important;
+    margin-bottom: 1.5rem !important;
+    flex-direction: row !important; /* Keep horizontal on tablet if possible */
+  }
+}
+
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2.5rem;
+  background: var(--admin-card-bg);
+  padding: 1.75rem 2.5rem;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  border: 1px solid var(--admin-border);
+}
+
+.header-info h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.75rem;
+  margin: 0;
+  color: var(--admin-text-main);
+  font-weight: 700;
+}
+
+.header-info p {
+  margin: 0.5rem 0 0;
+  color: var(--admin-text-muted);
+  font-size: 0.95rem;
+}
+
+.admin-user img {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  border: 2px solid var(--admin-primary);
+  object-fit: cover;
+}
+
+.admin-avatar-placeholder {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background: var(--admin-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--admin-text-muted);
+  border: 2px solid var(--admin-primary);
+}
+
+.admin-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  width: 100%;
+}
+
+/* Room Management */
+.placeholder-text {
+  text-align: center;
+  padding: 4rem;
+  color: var(--admin-text-muted);
+  font-style: italic;
+  background: var(--admin-card-bg);
+  border-radius: 20px;
+  border: 2px dashed #e2e8f0;
+}
+
+@media (max-width: 1024px) {
+  .burger-menu {
+    display: flex;
+  }
+  
+  .admin-sidebar {
+    transform: translateX(-100%);
+    width: 280px;
+    box-shadow: 4px 0 30px rgba(0, 0, 0, 0.2);
+  }
+  
+  .admin-sidebar.open {
+    transform: translateX(0);
+  }
+  
+  .admin-sidebar-overlay {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+  }
+  
+  .admin-sidebar.open + .admin-sidebar-overlay {
+    opacity: 1;
+    visibility: visible;
+  }
+  
+  .admin-main {
+    margin-left: 0;
+    width: 100%;
+    padding-left: 5rem;
+    padding-top: 5rem;
+  }
+  
+  .admin-logo h2, .admin-nav button span { display: block; }
+  .admin-nav button { padding: 1rem 1.5rem; justify-content: flex-start; }
+}
+
+/* Mobile Overlay - separate class for JS control */
+.sidebar-overlay {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .sidebar-overlay {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(10, 25, 31, 0.4);
+    backdrop-filter: blur(4px);
+    z-index: 999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+  }
+  
+  .sidebar-overlay.active {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+/* Loading & Not Authorized States */
+.admin-loading,
+.not-authorized-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: var(--admin-bg);
+  text-align: center;
+  padding: 2rem;
+}
+
+.loader {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e2e8f0;
+  border-top-color: var(--admin-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.auth-card {
+  background: white;
+  padding: 3rem;
+  border-radius: 24px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
+  max-width: 450px;
+  width: 100%;
+  border: 1px solid var(--admin-border);
+}
+
+.auth-card i {
+  font-size: 3.5rem;
+  color: #ef4444;
+  margin-bottom: 1.5rem;
+}
+
+.auth-card h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: 2.2rem;
+  color: var(--admin-text-main);
+  margin-bottom: 1rem;
+  font-weight: 800;
+}
+
+.auth-card p {
+  color: var(--admin-text-muted);
+  line-height: 1.6;
+}
+
+.user-info-box {
+  margin: 2rem 0;
+  padding: 1rem;
+  background: var(--admin-bg);
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.user-info-box p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.hint {
+  font-size: 0.85rem !important;
+  margin-bottom: 2rem !important;
+}
+
+.back-home-btn {
+  display: inline-block;
+  padding: 0.85rem 2rem;
+  background: var(--admin-primary);
+  color: white;
+  text-decoration: none;
+  border-radius: 10px;
+  font-weight: 700;
+  transition: all 0.3s ease;
+  box-shadow: 0 10px 20px rgba(217, 78, 40, 0.2);
+}
+
+.back-home-btn:hover {
+  background: var(--admin-primary-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 25px rgba(217, 78, 40, 0.3);
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 768px) {
+  /* Floating menu button adjustments */
+  .floating-menu-btn {
+    top: 1rem;
+    left: 1rem;
+    width: 44px;
+    height: 44px;
+    padding: 0.625rem;
+  }
+  
+  /* Main content adjustments */
+  .admin-main {
+    padding: 1rem;
+    padding-top: 5rem;
+  }
+  
+  /* Header adjustments for mobile */
+  .admin-header {
+    padding: 1rem !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 1rem !important;
+    margin-bottom: 1.5rem !important;
+  }
+  
+  .header-info h1 {
+    font-size: 1.125rem;
+  }
+  
+  .header-info p {
+    font-size: 0.85rem;
+  }
+  
+  .admin-user {
+    align-self: flex-end;
+    margin-top: -3.5rem; /* Overlap with text on small screen */
+  }
+  
+  /* Sidebar adjustments */
+  .admin-sidebar {
+    width: 260px;
+  }
+  
+  .admin-logo {
+    padding: 1.5rem;
+  }
+  
+  .admin-logo h2 {
+    font-size: 1.125rem;
+  }
+  
+  .admin-nav button {
+    padding: 0.875rem 1.25rem;
+    font-size: 0.95rem;
+  }
+  
+  /* Content adjustments */
+  .admin-content {
+    gap: 1.5rem;
+  }
+  
+  /* Make content scrollable */
+  .admin-layout {
+    overflow-x: hidden;
+  }
+}
+
+/* Small mobile devices */
+@media (max-width: 480px) {
+  .floating-menu-btn {
+    top: 0.75rem;
+    left: 0.75rem;
+    width: 40px;
+    height: 40px;
+  }
+  
+  .admin-main {
+    padding: 0.75rem;
+    padding-top: 4.5rem;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+  
+  .admin-header {
+    padding: 0.875rem;
+    border-radius: 12px;
+  }
+  
+  .header-info h1 {
+    font-size: 1.1rem;
+  }
+  
+  .admin-sidebar {
+    width: 85%; /* Make it wider for better readability on small phones */
+    max-width: 280px;
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 70px; /* Space for the fixed button */
+  }
+
+  .admin-logo {
+    padding: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    flex-shrink: 0;
+  }
+  
+  .admin-logo h2 {
+    font-size: 1.125rem;
+  }
+  
+  .admin-nav {
+    padding: 0.25rem;
+    gap: 0.125rem;
+    flex: 1;
+    overflow-y: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .admin-nav button {
+    padding: 0.625rem 1rem;
+    font-size: 0.875rem;
+    gap: 0.625rem;
+    border-radius: 10px;
+    flex-shrink: 0;
+  }
+  
+  .admin-nav button i {
+    width: 18px;
+    font-size: 0.9rem;
+  }
+
+  .admin-nav button.exit-btn {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 0.875rem 1.25rem;
+    background: var(--admin-sidebar-bg);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    margin: 0;
+    border-radius: 0;
+    box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* Desktop/Mobile visibility classes */
+.desktop-only {
+  display: block;
+}
+
+.mobile-only {
+  display: none;
+}
+
+.mobile-close-btn {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .desktop-only {
+    display: none;
+  }
+  
+  .mobile-only {
+    display: block;
+  }
+  
+  .mobile-close-btn {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.25rem;
+    color: var(--admin-sidebar-text);
+  }
+  
+  .mobile-close-btn:hover {
+    color: #fca5a5;
+    background: rgba(239, 68, 68, 0.1);
+  }
+}
