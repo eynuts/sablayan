@@ -1,0 +1,658 @@
+/* ================================ */
+/* DIVING PAGE STYLES              */
+/* ================================ */
+
+.diving-page {
+  background-color: #fcfbf9;
+  min-height: 100vh;
+}
+
+/* Diving Hero */
+.diving-hero {
+  position: relative;
+  height: 100vh;
+  min-height: 600px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  overflow: hidden;
+  background: #0a191f;
+}
+
+.diving-hero-video {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  min-width: 100%;
+  min-height: 100%;
+  width: auto;
+  height: auto;
+  transform: translateX(-50%) translateY(-50%);
+  z-index: 0;
+  object-fit: cover;
+  opacity: 0.6;
+}
+
+.diving-hero-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    rgba(10, 25, 31, 0.4) 0%,
+    rgba(10, 25, 31, 0.2) 50%,
+    rgba(10, 25, 31, 0.9) 100%
+  );
+  z-index: 1;
+}
+
+.diving-hero-content {
+  position: relative;
+  z-index: 2;
+  color: white;
+  padding: 0 2rem;
+  max-width: 900px;
+  animation: fadeInUp 1s ease-out;
+}
+
+.diving-hero-content .section-tag {
+  color: #a8d5ba;
+  letter-spacing: 0.3em;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  display: block;
+}
+
+.diving-hero-content h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: 5rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  line-height: 1.1;
+  text-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.diving-hero-content p {
+  font-size: 1.5rem;
+  opacity: 0.9;
+  font-weight: 300;
+  letter-spacing: 0.05em;
+}
+
+/* Diving Intro */
+.diving-intro {
+  padding: 10rem 0;
+  background: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.diving-intro::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 30%;
+  height: 100%;
+  background: linear-gradient(to left, rgba(168, 213, 186, 0.05), transparent);
+  pointer-events: none;
+}
+
+.intro-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 6rem;
+  align-items: center;
+}
+
+.intro-image-wrapper {
+  position: relative;
+}
+
+.intro-img {
+  width: 100%;
+  height: 600px;
+  object-fit: cover;
+  border-radius: 40px;
+  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.12);
+  position: relative;
+  z-index: 2;
+  transition: transform 0.5s ease;
+}
+
+.intro-image-wrapper:hover .intro-img {
+  transform: translateY(-10px);
+}
+
+.intro-image-wrapper::after {
+  content: '';
+  position: absolute;
+  bottom: -40px;
+  right: -40px;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, #d94e28 0%, transparent 70%);
+  border-radius: 50%;
+  z-index: 1;
+  opacity: 0.1;
+}
+
+.intro-text .section-tag {
+  color: #d94e28;
+  margin-bottom: 1.5rem;
+  display: inline-block;
+  font-weight: 800;
+  padding: 0.5rem 1.2rem;
+  background: rgba(217, 78, 40, 0.05);
+  border-radius: 50px;
+}
+
+.intro-text h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 3.5rem;
+  color: #122b36;
+  margin-bottom: 2rem;
+  line-height: 1.1;
+}
+
+.highlight-p {
+  color: #555;
+  font-size: 1.1rem;
+  line-height: 1.8;
+  margin-bottom: 3rem;
+  position: relative;
+  padding-left: 1.5rem;
+  border-left: 3px solid #a8d5ba;
+}
+
+.schedule-card {
+  background: #fdfdfd;
+  padding: 2.5rem;
+  border-radius: 30px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.03);
+  position: relative;
+  overflow: hidden;
+}
+
+.schedule-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 6px;
+  background: linear-gradient(to right, #a8d5ba, #d94e28);
+}
+
+.schedule-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: #1e4d58;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 0.15em;
+  margin-bottom: 1.5rem;
+}
+
+.schedule-header i {
+  color: #d94e28;
+}
+
+.schedule-card h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 2.2rem;
+  color: #122b36;
+  margin-bottom: 1rem;
+}
+
+.schedule-card p {
+  color: #666;
+  margin-bottom: 2.5rem;
+  font-size: 1.05rem;
+}
+
+.contact-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.contact-info p {
+  margin: 0;
+  font-weight: 600;
+  color: #122b36;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 1.1rem;
+}
+
+.contact-info i {
+  width: 40px;
+  height: 40px;
+  background: rgba(217, 78, 40, 0.1);
+  color: #d94e28;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+}
+
+/* Whale Shark Section */
+.whale-shark-section {
+  position: relative;
+  padding: 10rem 0;
+  background: #0a191f;
+  color: white;
+  overflow: hidden;
+}
+
+.whale-shark-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 70% 50%, rgba(26, 61, 75, 0.3) 0%, rgba(10, 25, 31, 0.95) 100%);
+  z-index: 1;
+}
+
+.whale-shark-content {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: 6rem;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+}
+
+.whale-shark-text .section-tag {
+  color: #a8d5ba;
+  margin-bottom: 1.5rem;
+  display: inline-block;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+}
+
+.whale-shark-text h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 3.5rem;
+  margin-bottom: 2rem;
+  color: white;
+  line-height: 1.1;
+}
+
+.whale-shark-text p {
+  font-size: 1.1rem;
+  line-height: 1.9;
+  opacity: 0.8;
+  max-width: 500px;
+  margin-bottom: 2.5rem;
+}
+
+.whale-shark-features {
+  display: flex;
+  gap: 2.5rem;
+}
+
+.feature-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.feature-item i {
+  font-size: 1.5rem;
+  color: #a8d5ba;
+}
+
+.feature-item span {
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.whale-shark-visual {
+  position: relative;
+}
+
+.whale-shark-visual img {
+  width: 100%;
+  border-radius: 40px;
+  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.5);
+  transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.whale-shark-visual:hover img {
+  transform: scale(1.02);
+}
+
+.whale-shark-visual::before {
+  content: '';
+  position: absolute;
+  top: -20px;
+  right: -20px;
+  width: 100px;
+  height: 100px;
+  background: rgba(168, 213, 186, 0.1);
+  border-radius: 50%;
+  filter: blur(20px);
+}
+
+/* Diving Courses */
+.diving-courses {
+  padding: 10rem 0;
+  background: #f8fbfb;
+}
+
+.section-header-centered {
+  text-align: center;
+  max-width: 800px;
+  margin: 0 auto 5rem;
+}
+
+.section-header-centered .section-tag {
+  color: #d94e28;
+  margin-bottom: 1rem;
+  display: block;
+  font-weight: 700;
+}
+
+.section-header-centered h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 3.5rem;
+  color: #122b36;
+  margin-bottom: 1.5rem;
+}
+
+.section-header-centered p {
+  color: #666;
+  font-size: 1.1rem;
+}
+
+.courses-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 2.5rem;
+  margin-bottom: 4rem;
+}
+
+.course-card {
+  background: white;
+  padding: 3.5rem 2.5rem;
+  border-radius: 35px;
+  text-align: center;
+  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.02);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.course-card:hover {
+  transform: translateY(-15px);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.08);
+  border-color: rgba(168, 213, 186, 0.3);
+}
+
+.course-icon {
+  width: 90px;
+  height: 90px;
+  background: rgba(168, 213, 186, 0.1);
+  border-radius: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2.5rem;
+  transition: all 0.4s ease;
+}
+
+.course-card:hover .course-icon {
+  background: #a8d5ba;
+  transform: rotate(10deg);
+}
+
+.course-icon i {
+  font-size: 2.5rem;
+  color: #1e4d58;
+  transition: all 0.4s ease;
+}
+
+.course-card:hover .course-icon i {
+  color: white;
+}
+
+.course-card h4 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.4rem;
+  color: #122b36;
+  margin-bottom: 1.5rem;
+  line-height: 1.3;
+}
+
+.course-badge {
+  background: #f0f7f4;
+  color: #1e4d58;
+  padding: 0.5rem 1.2rem;
+  border-radius: 50px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.rates-notice {
+  text-align: center;
+  color: #999;
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+/* Equipment Rental */
+.equipment-rental {
+  padding: 10rem 0;
+  background: white;
+}
+
+.rental-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6rem;
+  align-items: center;
+}
+
+.rental-text .section-tag {
+  color: #d94e28;
+  margin-bottom: 1.5rem;
+  display: block;
+}
+
+.rental-text h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 3.5rem;
+  color: #122b36;
+  margin-bottom: 2rem;
+}
+
+.rental-text p {
+  color: #666;
+  font-size: 1.1rem;
+  line-height: 1.8;
+  margin-bottom: 3rem;
+}
+
+.equipment-list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+.equipment-list li {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: #444;
+  font-weight: 500;
+  font-size: 1.05rem;
+}
+
+.equipment-list i {
+  color: #a8d5ba;
+  font-size: 1.2rem;
+}
+
+.rental-image img {
+  width: 100%;
+  border-radius: 40px;
+  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.12);
+}
+
+/* Diving CTA */
+.diving-cta {
+  padding: 10rem 0;
+  position: relative;
+  background: #0a191f;
+  overflow: hidden;
+}
+
+.cta-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: url('https://images.unsplash.com/photo-1544551763-47a0159c9212?q=80&w=2000&auto=format&fit=crop') center/cover;
+  opacity: 0.3;
+}
+
+.cta-box-glass {
+  position: relative;
+  z-index: 2;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50px;
+  padding: 6rem 4rem;
+  text-align: center;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.cta-box-glass h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 4rem;
+  color: white;
+  margin-bottom: 1.5rem;
+  line-height: 1.1;
+}
+
+.cta-box-glass p {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 1.4rem;
+  margin-bottom: 3.5rem;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.cta-actions {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+}
+
+.btn-primary-large {
+  background: #d94e28;
+  color: white;
+  padding: 1.2rem 3rem;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 1.1rem;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 10px 30px rgba(217, 78, 40, 0.3);
+}
+
+.btn-primary-large:hover {
+  transform: translateY(-5px);
+  background: #bf3f1d;
+  box-shadow: 0 15px 40px rgba(217, 78, 40, 0.4);
+}
+
+.btn-secondary-large {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  padding: 1.2rem 3rem;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 1.1rem;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn-secondary-large:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-5px);
+}
+
+@media (max-width: 1024px) {
+  .intro-grid, .whale-shark-content, .rental-grid {
+    grid-template-columns: 1fr;
+    gap: 4rem;
+  }
+
+  .intro-text, .whale-shark-text, .rental-text {
+    text-align: center;
+  }
+
+  .highlight-p {
+    padding-left: 0;
+    border-left: none;
+  }
+
+  .whale-shark-text p {
+    margin: 0 auto 2rem;
+  }
+
+  .equipment-list {
+    max-width: 500px;
+    margin: 0 auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .diving-hero-content h1 {
+    font-size: 3.5rem;
+  }
+
+  .intro-text h2, .whale-shark-text h2, .section-header-centered h2, .rental-text h2, .cta-box-glass h2 {
+    font-size: 2.5rem;
+  }
+
+  .cta-box-glass {
+    padding: 4rem 2rem;
+  }
+
+  .cta-actions {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .schedule-card h3 {
+    font-size: 1.5rem;
+  }
+}
