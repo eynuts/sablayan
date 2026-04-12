@@ -1,22 +1,45 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { ref, push, set } from 'firebase/database'
 import { db } from '../../firebase'
+import { useAuth } from '../../AuthContext'
 import Navbar from '../../components/Navbar'
+import PageLoader from '../../components/PageLoader'
+import { uploadToCloudinaryUnsigned } from '../../utils/cloudinary'
+import { preloadImage } from '../../utils/pageLoad'
+import { CHECK_IN_TIME, CHECK_OUT_TIME, formatPolicyTime } from '../../utils/bookingPolicy'
 import './Payment.css'
 
 // QR Code image import
 import qrImage from '../../assets/images/qr.png'
 
 const Payment = () => {
+  const { user } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
   
   const bookingData = location.state?.bookingData || null
   const [referenceNumber, setReferenceNumber] = useState('')
+  const [receiptFile, setReceiptFile] = useState(null)
+  const [receiptPreviewUrl, setReceiptPreviewUrl] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
   const [showApprovalModal, setShowApprovalModal] = useState(false)
+  const [pageReady, setPageReady] = useState(false)
+
+  useEffect(() => {
+    let active = true
+
+    preloadImage(qrImage).finally(() => {
+      if (active) {
+        setPageReady(true)
+      }
+    })
+
+    return () => {
+      active = false
+    }
+  }, [])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -26,17 +49,48 @@ const Payment = () => {
       return
     }
 
+    if (!user?.email) {
+      alert('Please sign in before completing your booking.')
+      navigate('/auth', { state: { from: { pathname: '/payment' } } })
+      return
+    }
+
     if (!bookingData) {
       alert('No booking data found. Please start a new booking.')
       navigate('/booking')
       return
     }
 
+    if (!receiptFile) {
+      alert('Please upload your payment receipt screenshot.')
+      return
+    }
+
     setIsSubmitting(true)
 
     try {
-      // For GUI presentation only - skip Firebase saving
-      // Show approval modal directly
+      const uploadResult = await uploadToCloudinaryUnsigned(receiptFile)
+      const fullName = bookingData.name || ''
+      const [firstName, ...restNames] = fullName.trim().split(' ')
+      const lastName = restNames.join(' ')
+
+      const bookingPayload = {
+        ...bookingData,
+        email: user.email,
+        userId: user.uid,
+        firstName: firstName || bookingData.name || 'Guest',
+        lastName: lastName || '',
+        referenceNumber,
+        paymentReceiptUrl: uploadResult.secure_url || '',
+        paymentStatus: 'pending',
+        bookingStatus: 'pending',
+        createdAt: new Date().toISOString()
+      }
+
+      const bookingsRef = ref(db, 'bookings')
+      const bookingRef = push(bookingsRef)
+      await set(bookingRef, bookingPayload)
+
       setShowApprovalModal(true)
       
     } catch (error) {
@@ -44,6 +98,16 @@ const Payment = () => {
       alert('Failed to process payment. Please try again.')
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  const handleReceiptChange = (e) => {
+    const file = e.target.files?.[0] || null
+    setReceiptFile(file)
+    if (file) {
+      setReceiptPreviewUrl(URL.createObjectURL(file))
+    } else {
+      setReceiptPreviewUrl('')
     }
   }
 
@@ -56,6 +120,21 @@ const Payment = () => {
           <p>Please complete the booking form first.</p>
           <button onClick={() => navigate('/booking')} className="back-btn">
             Go to Booking
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (bookingData.email && user?.email && bookingData.email !== user.email) {
+    return (
+      <div id="payment-page-root">
+        <Navbar />
+        <div className="payment-error">
+          <h2>Account Mismatch</h2>
+          <p>Please restart the booking using the currently signed-in account.</p>
+          <button onClick={() => navigate('/booking')} className="back-btn">
+            Back to Booking
           </button>
         </div>
       </div>
@@ -120,6 +199,7 @@ const Payment = () => {
 
   return (
     <div id="payment-page-root">
+      {!pageReady && <PageLoader text="Loading payment details..." />}
       <Navbar />
       
       <main className="payment-page-content">
@@ -179,18 +259,53 @@ const Payment = () => {
               <div className="payment-summary">
                 <h3>Booking Summary</h3>
                 <div className="summary-details">
-                  <div className="detail-row">
-                    <span>Room</span>
-                    <span>{bookingData.room?.title} - {bookingData.room?.subtitle}</span>
-                  </div>
-                  <div className="detail-row">
-                    <span>Check-in</span>
-                    <span>{bookingData.checkIn ? new Date(bookingData.checkIn).toLocaleDateString('en-PH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : 'Not set'}</span>
-                  </div>
-                  <div className="detail-row">
-                    <span>Check-out</span>
-                    <span>{bookingData.checkOut ? new Date(bookingData.checkOut).toLocaleDateString('en-PH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : 'Not set'}</span>
-                  </div>
+                  {bookingData.type === 'room' ? (
+                    <>
+                      <div className="detail-row">
+                        <span>Activity</span>
+                        <span><i className="fas fa-bed"></i> Room Accommodation</span>
+                      </div>
+                      <div className="detail-row">
+                        <span>Room</span>
+                        <span>{bookingData.room?.title} - {bookingData.room?.subtitle}</span>
+                      </div>
+                      <div className="detail-row">
+                        <span>Check-in</span>
+                        <span>{bookingData.checkIn ? new Date(bookingData.checkIn).toLocaleDateString('en-PH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : 'Not set'}</span>
+                      </div>
+                      <div className="detail-row">
+                        <span>Check-out</span>
+                        <span>{bookingData.checkOut ? new Date(bookingData.checkOut).toLocaleDateString('en-PH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : 'Not set'}</span>
+                      </div>
+                      <div className="detail-row">
+                        <span>Check-in Time</span>
+                        <span>{formatPolicyTime(CHECK_IN_TIME)}</span>
+                      </div>
+                      <div className="detail-row">
+                        <span>Check-out Time</span>
+                        <span>{formatPolicyTime(CHECK_OUT_TIME)}</span>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="detail-row">
+                        <span>Activity</span>
+                        <span><i className="fas fa-wind"></i> Zipline Adventure</span>
+                      </div>
+                      <div className="detail-row">
+                        <span>Experience</span>
+                        <span>{bookingData.activity?.title} - {bookingData.ziplineType === 'local' ? 'Sablayeño' : 'Tourist'} Rate</span>
+                      </div>
+                      <div className="detail-row">
+                        <span>Date</span>
+                        <span>{bookingData.date ? new Date(bookingData.date).toLocaleDateString('en-PH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : 'Not set'}</span>
+                      </div>
+                      <div className="detail-row">
+                        <span>Duration</span>
+                        <span>15-20 minutes</span>
+                      </div>
+                    </>
+                  )}
                   <div className="detail-row">
                     <span>Guests</span>
                     <span>{bookingData.guests} guest(s)</span>
@@ -221,6 +336,12 @@ const Payment = () => {
 
               <form onSubmit={handleSubmit} className="reference-form">
                 <h3><i className="fas fa-receipt"></i> Confirm Payment</h3>
+                {bookingData.type === 'room' && (
+                  <div className="payment-policy-note">
+                    <i className="fas fa-clock"></i>
+                    <span>Guest stay begins at {formatPolicyTime(CHECK_IN_TIME)} on the check-in date and ends at {formatPolicyTime(CHECK_OUT_TIME)} on the check-out date.</span>
+                  </div>
+                )}
                 <div className="form-group">
                   <label htmlFor="referenceNumber">GCash Reference Number</label>
                   <input 
@@ -236,6 +357,25 @@ const Payment = () => {
                     <i className="fas fa-info-circle"></i>
                     Find this in your GCash transaction history
                   </span>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="paymentReceipt">Payment Receipt Screenshot</label>
+                  <input
+                    type="file"
+                    id="paymentReceipt"
+                    name="paymentReceipt"
+                    accept="image/*"
+                    onChange={handleReceiptChange}
+                    required
+                  />
+                  <span className="input-hint">
+                    <i className="fas fa-cloud-upload-alt"></i>
+                    Uploaded directly to Cloudinary (unsigned)
+                  </span>
+                  {receiptPreviewUrl && (
+                    <img src={receiptPreviewUrl} alt="Receipt preview" className="receipt-preview" />
+                  )}
                 </div>
 
                 <button 

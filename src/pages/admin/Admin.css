@@ -81,7 +81,7 @@
 }
 
 .admin-logo {
-  padding: 2rem;
+  padding: 1.5rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   align-items: center;
@@ -164,7 +164,7 @@
   display: flex;
   flex-direction: column;
   padding: 1.5rem 1rem;
-  gap: 0.5rem;
+  gap: 0.3rem;
   flex: 1;
 }
 
@@ -172,7 +172,7 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 1rem 1.5rem;
+  padding: 0.875rem 1.25rem;
   background: transparent;
   border: none;
   color: var(--admin-sidebar-text);
@@ -201,6 +201,10 @@
   box-shadow: 0 10px 20px rgba(217, 78, 40, 0.2);
 }
 
+.admin-nav button.home-btn {
+  margin-top: auto;
+}
+
 /* Exit button styling - FIXED POSITIONING */
 .admin-nav button.exit-btn {
   position: absolute;
@@ -210,7 +214,7 @@
   background: var(--admin-sidebar-bg); /* Match sidebar background */
   color: #f87171;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 1.25rem 1.5rem;
+  padding: 1rem 1.25rem;
   border-radius: 0;
   margin: 0;
   z-index: 10;
@@ -310,6 +314,9 @@
   justify-content: center;
   color: var(--admin-text-muted);
   border: 2px solid var(--admin-primary);
+  font-size: 1rem;
+  font-weight: 800;
+  text-transform: uppercase;
 }
 
 .admin-content {
@@ -344,6 +351,25 @@
   .admin-sidebar.open {
     transform: translateX(0);
   }
+
+  .admin-logo h2 {
+    font-size: 1.25rem;
+  }
+
+  .admin-nav {
+    padding: 1rem 0.75rem;
+    gap: 0.25rem;
+  }
+
+  .admin-nav button {
+    padding: 0.875rem 1rem;
+    font-size: 0.85rem;
+  }
+
+  .admin-nav button i {
+    width: 18px;
+    font-size: 1rem;
+  }
   
   .admin-sidebar-overlay {
     display: block;
@@ -375,28 +401,62 @@
   .admin-nav button { padding: 1rem 1.5rem; justify-content: flex-start; }
 }
 
+@media (max-width: 768px) {
+  .admin-logo h2 {
+    font-size: 1.1rem;
+  }
+
+  .admin-nav {
+    padding: 0.75rem 0.5rem;
+    gap: 0.2rem;
+  }
+
+  .admin-nav button {
+    padding: 0.75rem 0.875rem;
+    font-size: 0.8rem;
+  }
+
+  .admin-nav button i {
+    width: 18px;
+    font-size: 0.95rem;
+  }
+
+  .admin-nav button.exit-btn {
+    padding: 1rem 0.875rem;
+    font-size: 0.8rem;
+  }
+}
+
 /* Mobile Overlay - separate class for JS control */
 .sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(10, 25, 31, 0.4);
+  z-index: 999;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
   display: none;
 }
 
 @media (max-width: 1024px) {
   .sidebar-overlay {
     display: block;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(10, 25, 31, 0.4);
-    backdrop-filter: blur(4px);
-    z-index: 999;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s ease;
   }
   
   .sidebar-overlay.active {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+/* Desktop - show overlay when sidebar is open */
+@media (min-width: 1025px) {
+  .sidebar-overlay.active {
+    display: block;
     opacity: 1;
     visibility: visible;
   }
@@ -455,6 +515,95 @@
 .auth-card p {
   color: var(--admin-text-muted);
   line-height: 1.6;
+}
+
+.auth-card .auth-dropdown-form {
+  display: grid;
+  gap: 0.8rem;
+  margin-top: 1.5rem;
+  text-align: left;
+}
+
+.auth-card .auth-dropdown-form input {
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 12px;
+  border: 1px solid #dbe4ea;
+  background: #f8fbfb;
+  color: var(--admin-text-main);
+  padding: 0.8rem 0.9rem;
+  font-size: 0.95rem;
+}
+
+.auth-card .auth-dropdown-form input:focus {
+  outline: none;
+  border-color: var(--admin-primary);
+  box-shadow: 0 0 0 3px rgba(217, 78, 40, 0.12);
+}
+
+.auth-card .auth-submit-btn,
+.auth-card .google-auth-btn {
+  width: 100%;
+  border: none;
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.auth-card .auth-submit-btn {
+  background: var(--admin-primary);
+  color: white;
+}
+
+.auth-card .auth-submit-btn:hover {
+  background: var(--admin-primary-dark);
+}
+
+.auth-card .auth-submit-btn:disabled,
+.auth-card .google-auth-btn:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
+}
+
+.auth-card .google-auth-btn {
+  background: white;
+  color: var(--admin-text-main);
+  border: 1px solid #dbe4ea;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.auth-card .google-auth-btn:hover {
+  background: #f8fbfb;
+}
+
+.auth-card .auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #94a3b8;
+  font-size: 0.72rem;
+  font-weight: 700;
+  margin: 0.1rem 0;
+}
+
+.auth-card .auth-divider::before,
+.auth-card .auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #e2e8f0;
+}
+
+.auth-card .auth-dropdown-error {
+  margin: 0;
+  color: #dc2626;
+  font-size: 0.85rem;
+  text-align: left;
 }
 
 .user-info-box {

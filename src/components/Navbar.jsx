@@ -1,23 +1,48 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../AuthContext'
+import { getAuthErrorMessage } from '../firebase'
 import './Navbar.css'
 
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
-  const { user, login, logout } = useAuth()
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [authError, setAuthError] = useState('')
+  const [isSignUpMode, setIsSignUpMode] = useState(false)
+  const [isSigningIn, setIsSigningIn] = useState(false)
+  const { user, loginWithEmail, signUpWithEmail, logout } = useAuth()
   const location = useLocation()
   const userMenuRef = useRef(null)
+  const mobileUserMenuRef = useRef(null)
 
-  // Extract first name from displayName
-  const getFirstName = (name) => {
-    if (!name) return 'Alex'
-    return name.split(' ')[0]
+  const getFirstName = (name, fallbackEmail = '') => {
+    const trimmedName = name?.trim()
+
+    if (trimmedName) {
+      return trimmedName.split(/\s+/)[0]
+    }
+
+    const emailName = fallbackEmail.split('@')[0]?.trim()
+    if (emailName) {
+      return emailName.split(/[._\s-]+/)[0]
+    }
+
+    return 'Account'
   }
 
-  const firstName = getFirstName(user?.displayName)
+  const getAvatarLetter = (name, fallbackEmail = '') => {
+    const firstNameValue = getFirstName(name, fallbackEmail)
+    return firstNameValue.charAt(0).toUpperCase()
+  }
+
+  const displayFirstName = getFirstName(user?.displayName, user?.email)
+  const displayAvatarLetter = getAvatarLetter(user?.displayName, user?.email)
+  const accountAvatarLetter = getAvatarLetter('', '')
 
   useEffect(() => {
     const handleScroll = () => {
@@ -30,7 +55,10 @@ const Navbar = () => {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+      const isOutsideDesktop = userMenuRef.current && !userMenuRef.current.contains(event.target);
+      const isOutsideMobile = mobileUserMenuRef.current && !mobileUserMenuRef.current.contains(event.target);
+      
+      if (isOutsideDesktop && isOutsideMobile) {
         setIsUserMenuOpen(false)
       }
     }
@@ -42,18 +70,44 @@ const Navbar = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen)
     if (!isMobileMenuOpen) {
       document.body.style.overflow = 'hidden'
+      document.documentElement.style.overflow = 'hidden'
     } else {
       document.body.style.overflow = 'auto'
+      document.documentElement.style.overflow = 'auto'
     }
   }
 
   const closeMobileMenu = () => {
     setIsMobileMenuOpen(false)
     document.body.style.overflow = 'auto'
+    document.documentElement.style.overflow = 'auto'
   }
 
   const toggleUserMenu = () => {
     setIsUserMenuOpen(!isUserMenuOpen)
+  }
+
+  const handleEmailAuth = async (event) => {
+    event.preventDefault()
+    setAuthError('')
+    setIsSigningIn(true)
+    try {
+      if (isSignUpMode) {
+        await signUpWithEmail(email.trim(), password, firstName.trim(), lastName.trim())
+      } else {
+        await loginWithEmail(email.trim(), password)
+      }
+      setFirstName('')
+      setLastName('')
+      setEmail('')
+      setPassword('')
+      setIsUserMenuOpen(false)
+    } catch (error) {
+      console.error('Email auth failed:', error)
+      setAuthError(getAuthErrorMessage(error, isSignUpMode ? 'signup' : 'signin'))
+    } finally {
+      setIsSigningIn(false)
+    }
   }
 
   const isActive = (path) => {
@@ -93,13 +147,9 @@ const Navbar = () => {
           {user ? (
             <div className="user-menu-container" ref={userMenuRef}>
               <div className="user-profile-trigger" onClick={toggleUserMenu}>
-                <span className="user-name-display">{firstName}</span>
+                <span className="user-name-display">{displayFirstName}</span>
                 <div className="user-avatar-wrapper theme-avatar">
-                  <img 
-                    src={user.photoURL || 'https://ui-avatars.com/api/?name=A&background=d94e28&color=fff'} 
-                    alt={user.displayName || 'Alex'} 
-                    className="user-avatar" 
-                  />
+                  <span className="user-avatar-text" aria-hidden="true">{displayAvatarLetter}</span>
                 </div>
               </div>
 
@@ -112,7 +162,7 @@ const Navbar = () => {
                   <Link to="/profile" className="user-dropdown-item" onClick={() => setIsUserMenuOpen(false)}>
                     <i className="fas fa-user-circle"></i> Profile Settings
                   </Link>
-                  <Link to="/booking" className="user-dropdown-item" onClick={() => setIsUserMenuOpen(false)}>
+                  <Link to="/profile#reservations" className="user-dropdown-item" onClick={() => setIsUserMenuOpen(false)}>
                     <i className="fas fa-calendar-alt"></i> My Bookings
                   </Link>
                   <button onClick={() => { logout(); setIsUserMenuOpen(false); }} className="user-dropdown-item logout-btn">
@@ -122,15 +172,78 @@ const Navbar = () => {
               )}
             </div>
           ) : (
-            <div className="user-profile-trigger" onClick={login}>
-              <span className="user-name-display">Alex</span>
-              <div className="user-avatar-wrapper theme-avatar">
-                <img src="https://ui-avatars.com/api/?name=A&background=d94e28&color=fff" alt="Alex" className="user-avatar" />
+            <div className="user-menu-container" ref={userMenuRef}>
+                <div className="user-profile-trigger" onClick={toggleUserMenu}>
+                  <span className="user-name-display">Account</span>
+                <div className="user-avatar-wrapper theme-avatar">
+                  <span className="user-avatar-text" aria-hidden="true">{accountAvatarLetter}</span>
+                </div>
               </div>
+
+              {isUserMenuOpen && (
+                <div className="user-dropdown-menu auth-dropdown-menu">
+                  <div className="user-dropdown-header">
+                    <p className="user-full-name">{isSignUpMode ? 'Create Account' : 'Login With Email'}</p>
+                  </div>
+                  <form className="auth-dropdown-form" onSubmit={handleEmailAuth}>
+                    {isSignUpMode && (
+                      <>
+                        <input
+                          type="text"
+                          placeholder="First name"
+                          value={firstName}
+                          onChange={(event) => setFirstName(event.target.value)}
+                          required={isSignUpMode}
+                        />
+                        <input
+                          type="text"
+                          placeholder="Last name"
+                          value={lastName}
+                          onChange={(event) => setLastName(event.target.value)}
+                          required={isSignUpMode}
+                        />
+                      </>
+                    )}
+                    <input
+                      type="email"
+                      placeholder="Email address"
+                      value={email}
+                      onChange={(event) => setEmail(event.target.value)}
+                      required
+                    />
+                    <input
+                      type="password"
+                      placeholder="Password"
+                      value={password}
+                      onChange={(event) => setPassword(event.target.value)}
+                      required
+                    />
+                    {authError && <p className="auth-dropdown-error">{authError}</p>}
+                    <button type="submit" className="auth-submit-btn" disabled={isSigningIn}>
+                      {isSigningIn
+                        ? (isSignUpMode ? 'Creating account...' : 'Signing in...')
+                        : (isSignUpMode ? 'Sign Up' : 'Sign In')
+                      }
+                    </button>
+
+                    <button
+                      type="button"
+                      className="auth-mode-toggle"
+                      onClick={() => {
+                        setAuthError('')
+                        setFirstName('')
+                        setLastName('')
+                        setIsSignUpMode((previous) => !previous)
+                      }}
+                    >
+                      {isSignUpMode ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
+                    </button>
+                  </form>
+                </div>
+              )}
             </div>
           )}
         </div>
-
         <button className={`hamburger ${isMobileMenuOpen ? 'active' : ''}`} onClick={toggleMobileMenu}>
           <span></span>
           <span></span>
@@ -142,33 +255,57 @@ const Navbar = () => {
       <div className={`mobile-menu ${isMobileMenuOpen ? 'active' : ''}`}>
         {user && (
           <div className="mobile-user-info">
-            <img 
-              src={user.photoURL} 
-              alt={user.displayName} 
-              className="mobile-user-avatar"
-              onError={(e) => {
-                e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName)}&background=0077b6&color=fff`
-              }}
-            />
+            <div className="mobile-user-avatar theme-avatar" aria-hidden="true">
+              <span className="mobile-user-avatar-text">{displayAvatarLetter}</span>
+            </div>
             <h3>{user.displayName}</h3>
             <p>{user.email}</p>
           </div>
         )}
         <div className="mobile-menu-links">
-          <Link to="/" onClick={closeMobileMenu}>Home</Link>
-          <Link to="/accommodations" onClick={closeMobileMenu}>Rooms</Link>
-          <Link to="/activity" onClick={closeMobileMenu}>Activities</Link>
-          <Link to="/location" onClick={closeMobileMenu}>Location</Link>
-          <Link to="/booking" onClick={closeMobileMenu}>Bookings</Link>
-          {user ? (
-            <button onClick={() => { logout(); closeMobileMenu(); }} className="mobile-login-btn logout">
-              <i className="fas fa-sign-out-alt"></i> Logout
-            </button>
-          ) : (
-            <button onClick={() => { login(); closeMobileMenu(); }} className="mobile-login-btn">
-              <i className="fab fa-google"></i> Login
-            </button>
+          <Link to="/" onClick={closeMobileMenu}>
+            <i className="fas fa-home"></i> <span>Home</span>
+          </Link>
+          <Link to="/accommodations" onClick={closeMobileMenu}>
+            <i className="fas fa-bed"></i> <span>Rooms</span>
+          </Link>
+          <Link to="/activity" onClick={closeMobileMenu}>
+            <i className="fas fa-hiking"></i> <span>Activities</span>
+          </Link>
+          <Link to="/location" onClick={closeMobileMenu}>
+            <i className="fas fa-map-marker-alt"></i> <span>Location</span>
+          </Link>
+          <Link to="/booking" onClick={closeMobileMenu}>
+            <i className="fas fa-calendar-check"></i> <span>Bookings</span>
+          </Link>
+          {user && (
+            <Link to="/profile" onClick={closeMobileMenu}>
+              <i className="fas fa-user-circle"></i> <span>Profile</span>
+            </Link>
           )}
+          
+          <div className="mobile-auth-container">
+            {user ? (
+              <div className="mobile-auth-authenticated">
+                <button onClick={() => { logout(); closeMobileMenu(); }} className="mobile-login-btn logout">
+                  <i className="fas fa-sign-out-alt"></i> Logout
+                </button>
+              </div>
+            ) : (
+              <Link 
+                to="/auth" 
+                className="mobile-auth-trigger-container" 
+                onClick={closeMobileMenu}
+              >
+                <div className="user-profile-trigger">
+                  <span className="user-name-display">Account</span>
+                  <div className="user-avatar-wrapper theme-avatar">
+                    <span className="user-avatar-text" aria-hidden="true">{accountAvatarLetter}</span>
+                  </div>
+                </div>
+              </Link>
+            )}
+          </div>
         </div>
         <div className="mobile-menu-social">
           <a href="#"><i className="fab fa-instagram"></i></a>

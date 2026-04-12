@@ -1,6 +1,8 @@
-import { useState, useEffect } from 'react'
-import { ref, onValue, update, remove } from 'firebase/database'
-import { db } from '../../firebase'
+import { useEffect, useState } from 'react'
+import { onValue, ref, remove, update } from 'firebase/database'
+import { db, syncExpiredPendingBookings } from '../../firebase'
+import PageLoader from '../../components/PageLoader'
+import { formatCurrency, formatDate, getBookingOperationalStatus, getPaymentStatusMeta, normalizeBookings } from './adminData'
 import './AdminBooking.css'
 
 const AdminBooking = () => {
@@ -9,11 +11,37 @@ const AdminBooking = () => {
   const [selectedBooking, setSelectedBooking] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [typeFilter, setTypeFilter] = useState('all')
+
+  useEffect(() => {
+    const bookingsRef = ref(db, 'bookings')
+
+    const unsubscribe = onValue(bookingsRef, (snapshot) => {
+      try {
+        const normalizedBookings = normalizeBookings(snapshot.val())
+        setBookings(normalizedBookings)
+        void syncExpiredPendingBookings(normalizedBookings)
+      } catch (error) {
+        console.error('Error fetching bookings:', error)
+        setBookings([])
+      } finally {
+        setBookingsLoading(false)
+      }
+    }, (error) => {
+      console.error('Firebase error:', error)
+      setBookings([])
+      setBookingsLoading(false)
+    })
+
+    return () => unsubscribe()
+  }, [])
 
   const handleConfirmBooking = async (id) => {
     try {
-      const bookingRef = ref(db, `bookings/${id}`)
-      await update(bookingRef, { paymentStatus: 'confirmed' })
+      await update(ref(db, `bookings/${id}`), { 
+        paymentStatus: 'confirmed',
+        bookingStatus: 'confirmed'
+      })
       alert('Booking confirmed successfully!')
     } catch (error) {
       console.error('Error confirming booking:', error)
@@ -21,280 +49,294 @@ const AdminBooking = () => {
     }
   }
 
-  const handleDeleteBooking = async (id) => {
-    if (window.confirm('Are you sure you want to delete this booking?')) {
-      try {
-        const bookingRef = ref(db, `bookings/${id}`)
-        await remove(bookingRef)
-        alert('Booking deleted successfully!')
-      } catch (error) {
-        console.error('Error deleting booking:', error)
-        alert('Failed to delete booking.')
-      }
+  const handleRevertBooking = async (id) => {
+    try {
+      await update(ref(db, `bookings/${id}`), { 
+        paymentStatus: 'pending',
+        bookingStatus: 'pending'
+      })
+      alert('Booking reverted to pending!')
+    } catch (error) {
+      console.error('Error reverting booking:', error)
+      alert('Failed to revert booking.')
     }
   }
 
-  // Stats calculation
+  const handleDeleteBooking = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this booking?')) {
+      return
+    }
+
+    try {
+      await remove(ref(db, `bookings/${id}`))
+      alert('Booking deleted successfully!')
+    } catch (error) {
+      console.error('Error deleting booking:', error)
+      alert('Failed to delete booking.')
+    }
+  }
+
   const stats = {
     total: bookings.length,
-    pending: bookings.filter(b => b.paymentStatus === 'pending').length,
-    confirmed: bookings.filter(b => b.paymentStatus === 'confirmed').length,
-    revenue: bookings.reduce((acc, b) => acc + (b.depositAmount || 0), 0)
+    rooms: bookings.filter((booking) => booking.type !== 'zipline').length,
+    ziplines: bookings.filter((booking) => booking.type === 'zipline').length,
+    pending: bookings.filter((booking) => booking.paymentStatus === 'pending').length,
+    confirmed: bookings.filter((booking) => booking.paymentStatus === 'confirmed').length,
+    cancelled: bookings.filter((booking) => booking.paymentStatus === 'cancelled').length,
+    activeStays: bookings.filter((booking) => ['confirmed', 'paid'].includes(booking.paymentStatus) && getBookingOperationalStatus(booking).phase === 'active').length,
+    revenue: bookings.reduce((sum, booking) => sum + Number(booking.depositAmount || 0), 0)
   }
 
-  // Filtered bookings
-  const filteredBookings = bookings.filter(booking => {
-    const matchesSearch = 
-      `${booking.firstName} ${booking.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (booking.referenceNumber && booking.referenceNumber.toLowerCase().includes(searchTerm.toLowerCase()))
-    
+  const filteredBookings = bookings.filter((booking) => {
+    const fullName = `${booking.firstName || ''} ${booking.lastName || ''}`.toLowerCase()
+    const matchesSearch = (
+      fullName.includes(searchTerm.toLowerCase()) ||
+      (booking.referenceNumber || '').toLowerCase().includes(searchTerm.toLowerCase())
+    )
+
     const matchesStatus = statusFilter === 'all' || booking.paymentStatus === statusFilter
-    
-    return matchesSearch && matchesStatus
+    const matchesType = typeFilter === 'all' || (typeFilter === 'room' && booking.type !== 'zipline') || (typeFilter === 'zipline' && booking.type === 'zipline')
+
+    return matchesSearch && matchesStatus && matchesType
   })
-
-  // Placeholder bookings data (for demo purposes when database is empty)
-  const placeholderBookings = [
-    {
-      id: 'placeholder-1',
-      firstName: 'John',
-      lastName: 'Doe',
-      email: 'john.doe@example.com',
-      phone: '+63 912 345 6789',
-      room: { title: 'MARIA', subtitle: 'Large Duplex', price: 5500 },
-      checkIn: '2026-03-20T14:00:00.000Z',
-      checkOut: '2026-03-22T11:00:00.000Z',
-      guests: 4,
-      referenceNumber: 'GC123456789',
-      depositAmount: 2750,
-      paymentStatus: 'confirmed',
-      bookingStatus: 'confirmed',
-      createdAt: '2026-03-15T10:00:00.000Z'
-    },
-    {
-      id: 'placeholder-2',
-      firstName: 'Jane',
-      lastName: 'Smith',
-      email: 'jane.smith@example.com',
-      phone: '+63 918 987 6543',
-      room: { title: 'CARMEN', subtitle: 'Dormitory', price: 8000 },
-      checkIn: '2026-03-25T14:00:00.000Z',
-      checkOut: '2026-03-28T11:00:00.000Z',
-      guests: 8,
-      referenceNumber: 'GC987654321',
-      depositAmount: 4000,
-      paymentStatus: 'pending',
-      bookingStatus: 'confirmed',
-      createdAt: '2026-03-16T09:30:00.000Z'
-    },
-    {
-      id: 'placeholder-3',
-      firstName: 'Michael',
-      lastName: 'Garcia',
-      email: 'michael.garcia@example.com',
-      phone: '+63 917 555 1234',
-      room: { title: 'CAROLINA', subtitle: 'Fan Room', price: 1500 },
-      checkIn: '2026-04-01T14:00:00.000Z',
-      checkOut: '2026-04-03T11:00:00.000Z',
-      guests: 2,
-      referenceNumber: 'GC456789123',
-      depositAmount: 1500,
-      paymentStatus: 'confirmed',
-      bookingStatus: 'confirmed',
-      createdAt: '2026-03-17T14:20:00.000Z'
-    }
-  ]
-
-  // Fetch bookings from Firebase Realtime Database
-  useEffect(() => {
-    const bookingsRef = ref(db, 'bookings')
-    
-    const unsubscribe = onValue(bookingsRef, (snapshot) => {
-      try {
-        const data = snapshot.val()
-        if (data) {
-          // Convert object to array and add IDs
-          const bookingsArray = Object.entries(data).map(([id, booking]) => ({
-            id,
-            ...booking
-          }))
-          // Sort by creation date (newest first)
-          bookingsArray.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-          setBookings(bookingsArray)
-        } else {
-          // Use placeholder data when database is empty
-          setBookings(placeholderBookings)
-        }
-      } catch (error) {
-        console.error('Error fetching bookings:', error)
-        // Fallback to placeholder data on error
-        setBookings(placeholderBookings)
-      } finally {
-        setBookingsLoading(false)
-      }
-    }, (error) => {
-      console.error('Firebase error:', error)
-      // Use placeholder data on Firebase error
-      setBookings(placeholderBookings)
-      setBookingsLoading(false)
-    })
-
-    return () => unsubscribe()
-  }, [])
 
   return (
     <div className="admin-booking-container">
-      {/* Stats Grid */}
-      <div className="admin-stats-grid">
-        <div className="stat-card">
-          <div className="stat-icon" style={{ background: '#e0f2fe', color: '#0369a1' }}>
-            <i className="fas fa-calendar-alt"></i>
-          </div>
-          <div className="stat-info">
-            <h3>{stats.total}</h3>
-            <p>Total Bookings</p>
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon" style={{ background: '#fef9c3', color: '#854d0e' }}>
-            <i className="fas fa-clock"></i>
-          </div>
-          <div className="stat-info">
-            <h3>{stats.pending}</h3>
-            <p>Pending Payment</p>
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon" style={{ background: '#dcfce7', color: '#166534' }}>
-            <i className="fas fa-check-circle"></i>
-          </div>
-          <div className="stat-info">
-            <h3>{stats.confirmed}</h3>
-            <p>Confirmed</p>
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon" style={{ background: '#f0f9ff', color: '#0077b6' }}>
-            <i className="fas fa-peso-sign"></i>
-          </div>
-          <div className="stat-info">
-            <h3>₱{stats.revenue.toLocaleString()}</h3>
-            <p>Total Deposits</p>
-          </div>
-        </div>
-      </div>
+      {bookingsLoading && (
+        <PageLoader
+          title="Bookings"
+          text="Loading bookings and guest records..."
+          fullScreen={false}
+        />
+      )}
 
-      {/* Bookings Table Card */}
-      <div className="admin-card">
-        <div className="card-header">
-          <div className="header-left">
-            <h3>Recent Bookings</h3>
-            <div className="search-box">
-              <i className="fas fa-search"></i>
-              <input 
-                type="text" 
-                placeholder="Search guest or ref#" 
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+      {!bookingsLoading && (
+        <div className="admin-stats-grid">
+          <div className="stat-card">
+            <div className="stat-icon" style={{ background: '#e0f2fe', color: '#0369a1' }}>
+              <i className="fas fa-calendar-alt"></i>
             </div>
-            <select 
-              className="status-filter"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-            >
-              <option value="all">All Status</option>
-              <option value="pending">Pending</option>
-              <option value="confirmed">Confirmed</option>
-            </select>
+            <div className="stat-info">
+              <h3>{stats.total}</h3>
+              <p>Total Bookings</p>
+            </div>
           </div>
-          <button className="export-btn">
-            <i className="fas fa-file-export"></i> Export Data
-          </button>
+          <div className="stat-card">
+            <div className="stat-icon" style={{ background: '#f3e8ff', color: '#7c3aed' }}>
+              <i className="fas fa-bed"></i>
+            </div>
+            <div className="stat-info">
+              <h3>{stats.rooms}</h3>
+              <p>Room Reservations</p>
+            </div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-icon" style={{ background: '#dbeafe', color: '#0284c7' }}>
+              <i className="fas fa-wind"></i>
+            </div>
+            <div className="stat-info">
+              <h3>{stats.ziplines}</h3>
+              <p>Zipline Bookings</p>
+            </div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-icon" style={{ background: '#fef9c3', color: '#854d0e' }}>
+              <i className="fas fa-clock"></i>
+            </div>
+            <div className="stat-info">
+              <h3>{stats.pending}</h3>
+              <p>Pending Payment</p>
+            </div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-icon" style={{ background: '#dcfce7', color: '#166534' }}>
+              <i className="fas fa-check-circle"></i>
+            </div>
+            <div className="stat-info">
+              <h3>{stats.confirmed}</h3>
+              <p>Confirmed</p>
+            </div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-icon" style={{ background: '#fee2e2', color: '#b91c1c' }}>
+              <i className="fas fa-ban"></i>
+            </div>
+            <div className="stat-info">
+              <h3>{stats.cancelled}</h3>
+              <p>Cancelled</p>
+            </div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-icon" style={{ background: '#dbeafe', color: '#1d4ed8' }}>
+              <i className="fas fa-door-open"></i>
+            </div>
+            <div className="stat-info">
+              <h3>{stats.activeStays}</h3>
+              <p>Active Stays</p>
+            </div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-icon" style={{ background: '#f0f9ff', color: '#0077b6' }}>
+              <i className="fas fa-peso-sign"></i>
+            </div>
+            <div className="stat-info">
+              <h3>{formatCurrency(stats.revenue)}</h3>
+              <p>Total Deposits</p>
+            </div>
+          </div>
         </div>
+      )}
 
-        {bookingsLoading ? (
-          <div className="loading-state">
-            <div className="loader"></div>
-            <p>Loading bookings...</p>
+      {!bookingsLoading && (
+        <div className="admin-card">
+          <div className="card-header">
+            <div className="header-left">
+              <h3>Recent Bookings</h3>
+              <div className="search-box">
+                <i className="fas fa-search"></i>
+                <input
+                  type="text"
+                  placeholder="Search guest or ref#"
+                  value={searchTerm}
+                  onChange={(event) => setSearchTerm(event.target.value)}
+                />
+              </div>
+              <div className="filter-group">
+                <div className="filter-wrapper">
+                  <select
+                    className="status-filter"
+                    value={statusFilter}
+                    onChange={(event) => setStatusFilter(event.target.value)}
+                  >
+                    <option value="all">All Status</option>
+                    <option value="pending">Pending</option>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="paid">Paid</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
+                </div>
+                <div className="filter-wrapper">
+                  <select
+                    className="type-filter"
+                    value={typeFilter}
+                    onChange={(event) => setTypeFilter(event.target.value)}
+                  >
+                    <option value="all">All Types ({stats.total})</option>
+                    <option value="room">Room Only ({stats.rooms})</option>
+                    <option value="zipline">Zipline Only ({stats.ziplines})</option>
+                  </select>
+                </div>
+              </div>
+            </div>
           </div>
-        ) : filteredBookings.length === 0 ? (
-          <div className="empty-state">
-            <i className="fas fa-calendar-times"></i>
-            <p>No bookings found matching your criteria</p>
-          </div>
-        ) : (
-          <div className="table-responsive">
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>Guest Name</th>
-                  <th>Room</th>
-                  <th>Check In</th>
-                  <th>Check Out</th>
-                  <th>Guests</th>
-                  <th>Reference #</th>
-                  <th>Status</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredBookings.map((booking) => (
-                  <tr key={booking.id}>
-                    <td data-label="Guest">
-                      <div className="guest-info">
-                        <span className="guest-name">{booking.firstName} {booking.lastName}</span>
-                        <span className="guest-email">{booking.email}</span>
-                      </div>
-                    </td>
-                    <td data-label="Room">{booking.room?.title} ({booking.room?.subtitle})</td>
-                    <td data-label="Check In">{booking.checkIn ? new Date(booking.checkIn).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A'}</td>
-                    <td data-label="Check Out">{booking.checkOut ? new Date(booking.checkOut).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A'}</td>
-                    <td data-label="Guests">{booking.guests}</td>
-                    <td data-label="Reference #">
-                      <span className="reference-number">{booking.referenceNumber || 'N/A'}</span>
-                    </td>
-                    <td data-label="Status">
-                      <span className={`status-badge ${booking.paymentStatus === 'pending' ? 'pending' : 'confirmed'}`}>
-                        <i className={`fas ${booking.paymentStatus === 'pending' ? 'fa-clock' : 'fa-check-circle'}`}></i>
-                        {booking.paymentStatus === 'pending' ? 'Pending' : 'Confirmed'}
-                      </span>
-                    </td>
-                    <td data-label="Action">
-                      <div className="action-btns">
-                        <button className="view-btn" onClick={() => setSelectedBooking(booking)} title="View Details">
-                          <i className="fas fa-eye"></i>
-                        </button>
-                        {booking.paymentStatus === 'pending' && (
-                          <button 
-                            className="confirm-btn" 
-                            onClick={() => handleConfirmBooking(booking.id)}
-                            title="Confirm Booking"
-                          >
-                            <i className="fas fa-check"></i>
-                          </button>
-                        )}
-                        <button 
-                          className="delete-btn" 
-                          onClick={() => handleDeleteBooking(booking.id)}
-                          title="Delete Booking"
-                        >
-                          <i className="fas fa-trash-alt"></i>
-                        </button>
-                      </div>
-                    </td>
+
+          {filteredBookings.length === 0 ? (
+            <div className="empty-state">
+              <i className="fas fa-calendar-times"></i>
+              <p>No bookings found in the database for this filter.</p>
+            </div>
+          ) : (
+            <div className="table-responsive">
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Guest Name</th>
+                    <th>Activity Type</th>
+                    <th>{typeFilter === 'zipline' ? 'Date' : 'Check In'}</th>
+                    {typeFilter !== 'zipline' && <th>Check Out</th>}
+                    <th>Guests</th>
+                    <th>Reference #</th>
+                    <th>Status</th>
+                    <th>Pay Status</th>
+                    <th>Action</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+                </thead>
+                <tbody>
+                  {filteredBookings.map((booking) => {
+                    const stayStatus = getBookingOperationalStatus(booking)
+                    const paymentStatus = getPaymentStatusMeta(booking.paymentStatus)
+                    const isZipline = booking.type === 'zipline'
 
-      {/* Booking Details Modal */}
+                    return (
+                    <tr key={booking.id}>
+                      <td data-label="Guest">
+                        <div className="guest-info">
+                          <span className="guest-name">{`${booking.firstName || ''} ${booking.lastName || ''}`.trim() || 'Guest'}</span>
+                          <span className="guest-email">{booking.email || 'No email provided'}</span>
+                        </div>
+                      </td>
+                      <td data-label="Activity Type">
+                        <span className={`activity-badge ${isZipline ? 'zipline' : 'room'}`}>
+                          <i className={`fas fa-${isZipline ? 'wind' : 'bed'}`}></i>
+                          {isZipline ? 'Zipline' : 'Room'}
+                        </span>
+                      </td>
+                      <td data-label={isZipline ? 'Date' : 'Check In'}>
+                        {isZipline ? formatDate(booking.date, { month: 'short', day: 'numeric', year: 'numeric' }) : formatDate(booking.checkIn, { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </td>
+                      {(typeFilter === 'all' || !isZipline) && <td data-label="Check Out">{!isZipline && formatDate(booking.checkOut, { month: 'short', day: 'numeric', year: 'numeric' })}</td>}
+                      <td data-label="Guests">{booking.guests || 0}</td>
+                      <td data-label="Reference #">
+                        <span className="reference-number">{booking.referenceNumber || 'N/A'}</span>
+                      </td>
+                      <td data-label="Status">
+                        <div className="stay-status-cell">
+                          <span className={`status-badge ${stayStatus.tone}`}>
+                            <i className={`fas ${stayStatus.phase === 'active' ? 'fa-door-open' : stayStatus.phase === 'completed' ? 'fa-flag-checkered' : stayStatus.phase === 'upcoming' ? 'fa-hourglass-start' : stayStatus.phase === 'cancelled' ? 'fa-ban' : 'fa-exclamation-circle'}`}></i>
+                            {stayStatus.label}
+                          </span>
+                        </div>
+                      </td>
+                      <td data-label="Pay Status">
+                        <span className={`status-badge ${paymentStatus.tone}`}>
+                          <i className={`fas ${paymentStatus.icon}`}></i>
+                          {paymentStatus.label}
+                        </span>
+                      </td>
+                      <td data-label="Action">
+                        <div className="action-btns">
+                          <button className="view-btn" onClick={() => setSelectedBooking(booking)} title="View Details">
+                            <i className="fas fa-eye"></i>
+                          </button>
+                          {booking.paymentStatus === 'pending' && (
+                            <button
+                              className="confirm-btn"
+                              onClick={() => handleConfirmBooking(booking.id)}
+                              title="Confirm Booking"
+                            >
+                              <i className="fas fa-check"></i>
+                            </button>
+                          )}
+                          {booking.paymentStatus === 'confirmed' && (
+                            <button
+                              className="revert-btn"
+                              onClick={() => handleRevertBooking(booking.id)}
+                              title="Revert to Pending"
+                            >
+                              <i className="fas fa-undo"></i>
+                            </button>
+                          )}
+                          <button
+                            className="delete-btn"
+                            onClick={() => handleDeleteBooking(booking.id)}
+                            title="Delete Booking"
+                          >
+                            <i className="fas fa-trash-alt"></i>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )})}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
       {selectedBooking && (
         <div className="booking-modal-overlay" onClick={() => setSelectedBooking(null)}>
-          <div className="booking-modal-content" onClick={(e) => e.stopPropagation()}>
+          <div className="booking-modal-content" onClick={(event) => event.stopPropagation()}>
             <div className="booking-modal-header">
               <h3>Booking Details</h3>
               <button className="modal-close-btn" onClick={() => setSelectedBooking(null)}>
@@ -304,36 +346,68 @@ const AdminBooking = () => {
             <div className="booking-modal-body">
               <div className="booking-detail-section">
                 <h4>Guest Information</h4>
-                <p><strong>Name:</strong> {selectedBooking.firstName} {selectedBooking.lastName}</p>
-                <p><strong>Email:</strong> {selectedBooking.email}</p>
+                <p><strong>Name:</strong> {`${selectedBooking.firstName || ''} ${selectedBooking.lastName || ''}`.trim() || 'Guest'}</p>
+                <p><strong>Email:</strong> {selectedBooking.email || 'N/A'}</p>
                 <p><strong>Phone:</strong> {selectedBooking.phone || 'N/A'}</p>
               </div>
-              <div className="booking-detail-section">
-                <h4>Room Details</h4>
-                <p><strong>Room:</strong> {selectedBooking.room?.title} ({selectedBooking.room?.subtitle})</p>
-                <p><strong>Price per night:</strong> ₱{selectedBooking.room?.price?.toLocaleString()}</p>
-              </div>
-              <div className="booking-detail-section">
-                <h4>Booking Dates</h4>
-                <p><strong>Check-in:</strong> {selectedBooking.checkIn ? new Date(selectedBooking.checkIn).toLocaleDateString('en-PH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'}</p>
-                <p><strong>Check-out:</strong> {selectedBooking.checkOut ? new Date(selectedBooking.checkOut).toLocaleDateString('en-PH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'}</p>
-                <p><strong>Number of Guests:</strong> {selectedBooking.guests}</p>
-              </div>
+              {selectedBooking.type === 'zipline' ? (
+                <>
+                  <div className="booking-detail-section">
+                    <h4>Activity Details</h4>
+                    <p><strong>Activity:</strong> {selectedBooking.activity?.title || 'Zipline Adventure'}</p>
+                    <p><strong>Experience Type:</strong> {selectedBooking.ziplineType === 'local' ? 'Sablayeño Rate' : 'Tourist Rate'}</p>
+                    <p><strong>Price per person:</strong> {formatCurrency(selectedBooking.activity?.price)}</p>
+                    <p><strong>Description:</strong> {selectedBooking.activity?.description}</p>
+                  </div>
+                  <div className="booking-detail-section">
+                    <h4>Activity Date</h4>
+                    <p><strong>Date:</strong> {formatDate(selectedBooking.date, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                    <p><strong>Duration:</strong> 15-20 minutes</p>
+                    <p><strong>Activity status:</strong> <span className={`status ${getBookingOperationalStatus(selectedBooking).tone}`}>{getBookingOperationalStatus(selectedBooking).label}</span></p>
+                    <p><strong>Status detail:</strong> {getBookingOperationalStatus(selectedBooking).details}</p>
+                    <p><strong>Number of Participants:</strong> {selectedBooking.guests || 0}</p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="booking-detail-section">
+                    <h4>Room Details</h4>
+                    <p><strong>Room:</strong> {selectedBooking.room?.title || 'N/A'} {selectedBooking.room?.subtitle ? `(${selectedBooking.room.subtitle})` : ''}</p>
+                    <p><strong>Price per night:</strong> {formatCurrency(selectedBooking.room?.price)}</p>
+                  </div>
+                  <div className="booking-detail-section">
+                    <h4>Booking Dates</h4>
+                    <p><strong>Check-in:</strong> {formatDate(selectedBooking.checkIn, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                    <p><strong>Check-out:</strong> {formatDate(selectedBooking.checkOut, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                    <p><strong>Stay status:</strong> <span className={`status ${getBookingOperationalStatus(selectedBooking).tone}`}>{getBookingOperationalStatus(selectedBooking).label}</span></p>
+                    <p><strong>Status detail:</strong> {getBookingOperationalStatus(selectedBooking).details}</p>
+                    <p><strong>Number of Guests:</strong> {selectedBooking.guests || 0}</p>
+                  </div>
+                </>
+              )}
               <div className="booking-detail-section">
                 <h4>Payment Information</h4>
                 <p><strong>Reference Number:</strong> {selectedBooking.referenceNumber || 'N/A'}</p>
-                <p><strong>Deposit Amount:</strong> ₱{selectedBooking.depositAmount?.toLocaleString()}</p>
-                <p><strong>Payment Status:</strong> <span className={`status ${selectedBooking.paymentStatus === 'pending' ? 'pending' : 'confirmed'}`}>{selectedBooking.paymentStatus === 'pending' ? 'Pending' : 'Confirmed'}</span></p>
+                <p><strong>Deposit Amount:</strong> {formatCurrency(selectedBooking.depositAmount)}</p>
+                <p><strong>Payment Status:</strong> <span className={`status ${getPaymentStatusMeta(selectedBooking.paymentStatus).tone}`}>{getPaymentStatusMeta(selectedBooking.paymentStatus).label}</span></p>
+                {selectedBooking.paymentReceiptUrl && (
+                  <p>
+                    <strong>Receipt:</strong>{' '}
+                    <a href={selectedBooking.paymentReceiptUrl} target="_blank" rel="noreferrer">
+                      View uploaded receipt
+                    </a>
+                  </p>
+                )}
               </div>
-              {selectedBooking.specialRequests && (
+              {selectedBooking.message && (
                 <div className="booking-detail-section">
-                  <h4>Special Requests</h4>
-                  <p>{selectedBooking.specialRequests}</p>
+                  <h4>Special Requests/Message</h4>
+                  <p>{selectedBooking.message}</p>
                 </div>
               )}
               <div className="booking-modal-actions">
                 {selectedBooking.paymentStatus === 'pending' && (
-                  <button 
+                  <button
                     className="confirm-btn-large"
                     onClick={() => {
                       handleConfirmBooking(selectedBooking.id)
@@ -343,7 +417,18 @@ const AdminBooking = () => {
                     <i className="fas fa-check"></i> Confirm Payment
                   </button>
                 )}
-                <button 
+                {selectedBooking.paymentStatus === 'confirmed' && (
+                  <button
+                    className="revert-btn-large"
+                    onClick={() => {
+                      handleRevertBooking(selectedBooking.id)
+                      setSelectedBooking(null)
+                    }}
+                  >
+                    <i className="fas fa-undo"></i> Revert to Pending
+                  </button>
+                )}
+                <button
                   className="delete-btn-large"
                   onClick={() => {
                     handleDeleteBooking(selectedBooking.id)

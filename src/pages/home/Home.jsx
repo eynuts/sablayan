@@ -1,12 +1,38 @@
+import { useEffect, useState } from 'react'
 import Navbar from '../../components/Navbar'
 import Footer from '../../components/Footer'
+import PageLoader from '../../components/PageLoader'
 import heroImage from '../../assets/images/hero.webp'
 import ziplineImage from '../../assets/images/zipline.webp'
 import roomsImage from '../../assets/images/rooms.webp'
 import divingImage from '../../assets/images/diving.webp'
+import { preloadImages } from '../../utils/pageLoad'
 import './Home.css'
 
 const Home = () => {
+  const [pageReady, setPageReady] = useState(false)
+
+  useEffect(() => {
+    let active = true
+
+    preloadImages([
+      heroImage,
+      ziplineImage,
+      roomsImage,
+      divingImage,
+      'https://i.pravatar.cc/150?u=sarah',
+      'https://i.pravatar.cc/150?u=mark'
+    ]).finally(() => {
+      if (active) {
+        setPageReady(true)
+      }
+    })
+
+    return () => {
+      active = false
+    }
+  }, [])
+
   const experiences = [
     {
       id: 3,
@@ -47,6 +73,7 @@ const Home = () => {
 
   return (
     <div className="home-page">
+      {!pageReady && <PageLoader text="Preparing your island welcome..." />}
       <Navbar />
       
       {/* Hero Section */}

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { BOOKING_TIMEZONE, CHECK_IN_TIME, CHECK_OUT_TIME } from '../../utils/bookingPolicy'
 import './AdminSettings.css'
 
 const AdminSettings = () => {
@@ -7,10 +8,10 @@ const AdminSettings = () => {
     siteEmail: 'sablayanadventurecamp@gmail.com',
     phone: '+63 912 345 6789',
     address: 'Poblacion, Sablayan, Occidental Mindoro, Philippines',
-    timezone: 'Asia/Manila',
+    timezone: BOOKING_TIMEZONE,
     currency: 'PHP',
-    checkInTime: '14:00',
-    checkOutTime: '12:00',
+    checkInTime: CHECK_IN_TIME,
+    checkOutTime: CHECK_OUT_TIME,
     maintenanceMode: false,
     emailNotifications: true,
     smsNotifications: true

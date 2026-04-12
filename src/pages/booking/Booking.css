@@ -109,6 +109,61 @@
   margin: 0;
 }
 
+.booking-auth-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin: 1.5rem 2rem 0;
+  padding: 0.9rem 1rem;
+  border: 1px solid #dcefe3;
+  border-radius: 14px;
+  background: #f4fbf7;
+  color: #244333;
+}
+
+.booking-auth-notice i {
+  color: #2f8f57;
+  margin-top: 0.1rem;
+}
+
+.booking-auth-notice p {
+  margin: 0;
+  line-height: 1.5;
+  font-size: 0.92rem;
+}
+
+.booking-auth-notice strong {
+  color: #122b36;
+}
+
+.booking-policy-strip {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+  margin: 1rem 2rem 0;
+}
+
+.booking-policy-item {
+  padding: 1rem 1.1rem;
+  border-radius: 16px;
+  background: #122b36;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.booking-policy-item strong {
+  font-size: 1.15rem;
+}
+
+.booking-policy-label {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
 .booking-form {
   padding: 1.5rem 2rem 2rem;
   flex: 1;
@@ -157,6 +212,12 @@
   outline: none;
   border-color: #a8d5ba;
   box-shadow: 0 0 0 4px rgba(168, 213, 186, 0.15);
+}
+
+.form-group input:disabled {
+  background: #f5f6f7;
+  color: #5b6670;
+  cursor: not-allowed;
 }
 
 .form-group input::placeholder,
@@ -487,6 +548,65 @@
   color: #666;
 }
 
+/* Activity Tabs */
+.activity-tabs {
+  display: flex;
+  gap: 0;
+  padding: 0 2rem;
+  border-bottom: 1px solid #eee;
+  margin-top: 0.5rem;
+}
+
+.activity-tab {
+  background: none;
+  border: none;
+  padding: 1.2rem 1.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -1px;
+}
+
+.activity-tab:hover {
+  color: #122b36;
+}
+
+.activity-tab.active {
+  color: #d94e28;
+  border-bottom-color: #d94e28;
+}
+
+.activity-tab i {
+  margin-right: 0.5rem;
+}
+
+/* Zipline Card Image */
+.zipline-card-image {
+  width: 100%;
+  height: 140px;
+  background: linear-gradient(135deg, #a8d5ba 0%, #7bc5a8 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.zipline-card-image i {
+  z-index: 2;
+  position: relative;
+}
+
+.zipline-card-image.popular {
+  background: linear-gradient(135deg, #d94e28 0%, #c43a19 100%);
+}
+
 .room-selector-info .capacity i {
   margin-right: 0.25rem;
 }
@@ -622,6 +742,14 @@
     padding: 1rem 1.5rem 1.5rem;
   }
 
+  .booking-auth-notice {
+    margin: 1rem 1.5rem 0;
+  }
+
+  .booking-policy-strip {
+    margin: 1rem 1.5rem 0;
+  }
+
   .form-row {
     grid-template-columns: 1fr;
     gap: 1rem;
@@ -684,5 +812,11 @@
 
   .room-selector-grid {
     padding: 1rem 1.5rem 1.5rem;
+  }
+}
+
+@media (max-width: 560px) {
+  .booking-policy-strip {
+    grid-template-columns: 1fr;
   }
 }

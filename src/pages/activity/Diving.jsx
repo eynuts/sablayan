@@ -1,14 +1,33 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Navbar from '../../components/Navbar'
 import Footer from '../../components/Footer'
+import PageLoader from '../../components/PageLoader'
 import divingVideo from '../../assets/images/diving.mp4'
 import apoImg from '../../assets/images/diving/apo.webp'
 import whaleImg from '../../assets/images/diving/whale.webp'
 import rentalImg from '../../assets/images/diving/rental.webp'
+import { preloadImages } from '../../utils/pageLoad'
 import './Diving.css'
 
 const Diving = () => {
+  const [imagesReady, setImagesReady] = useState(false)
+  const [videoReady, setVideoReady] = useState(false)
+
+  useEffect(() => {
+    let active = true
+
+    preloadImages([apoImg, whaleImg, rentalImg]).finally(() => {
+      if (active) {
+        setImagesReady(true)
+      }
+    })
+
+    return () => {
+      active = false
+    }
+  }, [])
+
   const courses = [
     { name: 'INTRO TO DIVE COURSE', icon: 'fas fa-mask' },
     { name: 'SCUBA OPEN WATER COURSE', icon: 'fas fa-swimmer' },
@@ -23,6 +42,9 @@ const Diving = () => {
 
   return (
     <div className="diving-page">
+      {(!imagesReady || !videoReady) && (
+        <PageLoader text="Loading diving highlights..." />
+      )}
       <Navbar />
       
       {/* Hero Section */}
@@ -33,6 +55,8 @@ const Diving = () => {
           muted 
           loop 
           playsInline
+          preload="auto"
+          onLoadedData={() => setVideoReady(true)}
         >
           <source src={divingVideo} type="video/mp4" />
         </video>
@@ -55,18 +79,6 @@ const Diving = () => {
               <span className="section-tag">Explore Apo Reef</span>
               <h2>Apo Reef Diving</h2>
               <p className="highlight-p">The fishing ban within Apo Reef has been a challenge for local fishermen, but eco-tourism is helping to compensate. This shift supports a more ecologically responsible system for sustaining this world-renowned natural park.</p>
-              <div className="schedule-card">
-                <div className="schedule-header">
-                  <i className="fas fa-calendar-check"></i>
-                  <span>Upcoming Schedule</span>
-                </div>
-                <h3>April 5 - 6, 2025</h3>
-                <p>Overnight in Apo Reef Island • Exclusive for 5 licensed divers</p>
-                <div className="contact-info">
-                  <p><i className="fas fa-phone-alt"></i> +63 939 933 8315</p>
-                  <p><i className="fas fa-phone-alt"></i> +63 995 340 7818</p>
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -138,21 +150,6 @@ const Diving = () => {
             </div>
             <div className="rental-image">
               <img src={rentalImg} alt="Diving Equipment" />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Final CTA Section */}
-      <section className="diving-cta">
-        <div className="cta-overlay"></div>
-        <div className="section-container">
-          <div className="cta-box-glass">
-            <h2>Ready for your next descent?</h2>
-            <p>Book your Apo Reef adventure today and experience world-class diving.</p>
-            <div className="cta-actions">
-              <Link to="/booking" className="btn-primary-large">Book Your Dive</Link>
-              <a href="tel:+639399338315" className="btn-secondary-large">Call to Inquire</a>
             </div>
           </div>
         </div>

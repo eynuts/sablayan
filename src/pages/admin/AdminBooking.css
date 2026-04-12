@@ -68,10 +68,18 @@
 .card-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 2rem;
   flex-wrap: wrap;
   gap: 1.5rem;
+}
+
+.card-header h3 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+  flex-basis: 100%;
 }
 
 .header-left {
@@ -79,6 +87,7 @@
   align-items: center;
   gap: 1.5rem;
   flex-wrap: wrap;
+  width: 100%;
 }
 
 /* Search & Filter */
@@ -111,20 +120,77 @@
   box-shadow: 0 0 0 3px rgba(217, 78, 40, 0.1);
 }
 
+.filter-group {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.filter-wrapper {
+  position: relative;
+  display: inline-block;
+  min-width: 160px;
+}
+
 .status-filter {
-  padding: 0.75rem 1rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  font-size: 0.9rem;
-  color: #475569;
+  width: 100%;
+  padding: 0.85rem 2.5rem 0.85rem 1.2rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 14px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1e293b;
   outline: none;
-  background-color: white;
+  background: linear-gradient(135deg, #ffffff 0%, #fff5f3 100%);
   cursor: pointer;
   transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+.status-filter:hover {
+  border-color: #fca5a5;
+  box-shadow: 0 4px 16px rgba(217, 78, 40, 0.2);
+  transform: translateY(-2px);
 }
 
 .status-filter:focus {
   border-color: var(--admin-primary);
+  box-shadow: 0 0 0 4px rgba(217, 78, 40, 0.15);
+  outline: none;
+}
+
+.type-filter {
+  width: 100%;
+  padding: 0.85rem 2.5rem 0.85rem 1.2rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 14px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1e293b;
+  outline: none;
+  background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+.type-filter:hover {
+  border-color: #bfdbfe;
+  box-shadow: 0 4px 16px rgba(2, 132, 199, 0.2);
+  transform: translateY(-2px);
+}
+
+.type-filter:focus {
+  border-color: var(--admin-primary);
+  box-shadow: 0 0 0 4px rgba(2, 132, 199, 0.15);
+  outline: none;
 }
 
 .export-btn {
@@ -179,19 +245,20 @@
 
 .admin-table thead th {
   text-align: left;
-  padding: 1.2rem 1rem;
+  padding: 0.75rem 0.5rem;
   color: #64748b;
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
   border-bottom: 2px solid #f1f5f9;
 }
 
 .admin-table tbody td {
-  padding: 1.2rem 1rem;
+  padding: 0.75rem 0.5rem;
   border-bottom: 1px solid #f1f5f9;
   color: #1e293b;
+  font-size: 0.9rem;
 }
 
 .admin-table tbody tr:hover {
@@ -199,15 +266,15 @@
 }
 
 .status-badge {
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-size: 0.8rem;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.7rem;
   font-weight: 700;
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.3rem;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
 }
 
 .status-badge.confirmed {
@@ -220,22 +287,69 @@
   color: #854d0e;
 }
 
+.status-badge.cancelled {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.status-badge.active {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.status-badge.upcoming {
+  background: #ede9fe;
+  color: #6d28d9;
+}
+
+.status-badge.completed {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.status-badge.unscheduled {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.activity-badge {
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  text-transform: capitalize;
+  letter-spacing: 0.3px;
+}
+
+.activity-badge.room {
+  background: #f3e8ff;
+  color: #7c3aed;
+}
+
+.activity-badge.zipline {
+  background: #dbeafe;
+  color: #0284c7;
+}
+
 .action-btns {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.3rem;
 }
 
 .action-btns button {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
   border: none;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
 }
 
 .view-btn { background: #f1f5f9; color: #64748b; }
@@ -243,6 +357,9 @@
 
 .confirm-btn { background: #dcfce7; color: #166534; }
 .confirm-btn:hover { background: #bbf7d0; }
+
+.revert-btn { background: #fef3c7; color: #92400e; }
+.revert-btn:hover { background: #fde68a; }
 
 .delete-btn { background: #fee2e2; color: #991b1b; }
 .delete-btn:hover { background: #fecaca; }
@@ -256,11 +373,11 @@
 .guest-name {
   font-weight: 700;
   color: var(--admin-text-main);
-  font-size: 0.95rem;
+  font-size: 0.9rem;
 }
 
 .guest-email {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: #64748b;
   margin-top: 2px;
 }
@@ -268,11 +385,24 @@
 .reference-number {
   font-family: 'Montserrat', sans-serif;
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   color: var(--admin-primary);
   background: rgba(217, 78, 40, 0.08);
-  padding: 4px 10px;
-  border-radius: 6px;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.stay-status-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  align-items: flex-start;
+}
+
+.stay-status-note {
+  color: #64748b;
+  font-size: 0.78rem;
+  line-height: 1.35;
 }
 
 /* Loading State */
@@ -450,6 +580,46 @@
   font-size: 0.8rem;
 }
 
+.booking-detail-section .status.cancelled {
+  color: #b91c1c;
+  background: #fee2e2;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+
+.booking-detail-section .status.active,
+.booking-detail-section .status.upcoming,
+.booking-detail-section .status.completed,
+.booking-detail-section .status.unscheduled,
+.booking-detail-section .status.cancelled {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+
+.booking-detail-section .status.active {
+  color: #1d4ed8;
+  background: #dbeafe;
+}
+
+.booking-detail-section .status.upcoming {
+  color: #6d28d9;
+  background: #ede9fe;
+}
+
+.booking-detail-section .status.completed {
+  color: #475569;
+  background: #e2e8f0;
+}
+
+.booking-detail-section .status.unscheduled {
+  color: #991b1b;
+  background: #fee2e2;
+}
+
 .booking-modal-actions {
   display: flex;
   gap: 1rem;
@@ -484,6 +654,18 @@
   background: var(--admin-primary-dark);
   transform: translateY(-2px);
   box-shadow: 0 12px 25px rgba(217, 78, 40, 0.3);
+}
+
+.revert-btn-large {
+  background: #fbbf24;
+  color: #78350f;
+  box-shadow: 0 10px 20px rgba(251, 191, 36, 0.2);
+}
+
+.revert-btn-large:hover {
+  background: #f59e0b;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 25px rgba(251, 191, 36, 0.3);
 }
 
 .delete-btn-large {
@@ -560,6 +742,19 @@
   }
 
   .status-filter {
+    width: 100%;
+  }
+
+  .type-filter {
+    width: 100%;
+  }
+
+  .filter-group {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-wrapper {
     width: 100%;
   }
 

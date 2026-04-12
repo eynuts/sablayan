@@ -1,83 +1,64 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { onValue, ref } from 'firebase/database'
+import { db, syncExpiredPendingBookings } from '../../firebase'
+import { useAdminAuth } from '../../AdminAuthContext'
+import { formatDate, normalizeBookings, normalizeUsers } from './adminData'
 import './AdminUsers.css'
 
 const AdminUsers = () => {
-  const [users] = useState([
-    {
-      id: 1,
-      name: 'John Doe',
-      email: 'john.doe@example.com',
-      phone: '+63 912 345 6789',
-      role: 'customer',
-      status: 'active',
-      joinedDate: '2026-01-15',
-      totalBookings: 3
-    },
-    {
-      id: 2,
-      name: 'Jane Smith',
-      email: 'jane.smith@example.com',
-      phone: '+63 918 987 6543',
-      role: 'customer',
-      status: 'active',
-      joinedDate: '2026-02-20',
-      totalBookings: 1
-    },
-    {
-      id: 3,
-      name: 'Michael Garcia',
-      email: 'michael.garcia@example.com',
-      phone: '+63 917 555 1234',
-      role: 'customer',
-      status: 'inactive',
-      joinedDate: '2025-12-10',
-      totalBookings: 0
-    },
-    {
-      id: 4,
-      name: 'Admin User',
-      email: 'admin@sidell.com',
-      phone: '+63 900 000 0000',
-      role: 'admin',
-      status: 'active',
-      joinedDate: '2025-06-01',
-      totalBookings: 0
-    },
-    {
-      id: 5,
-      name: 'Sarah Johnson',
-      email: 'sarah.johnson@example.com',
-      phone: '+63 916 444 5678',
-      role: 'customer',
-      status: 'active',
-      joinedDate: '2026-03-01',
-      totalBookings: 2
-    }
-  ])
-
+  const { user } = useAdminAuth()
+  const [bookings, setBookings] = useState([])
+  const [usersData, setUsersData] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
 
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = 
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase())
-    
-    const matchesStatus = statusFilter === 'all' || user.status === statusFilter
-    
+  useEffect(() => {
+    const bookingsRef = ref(db, 'bookings')
+    const usersRef = ref(db, 'users')
+
+    const unsubscribeBookings = onValue(bookingsRef, (snapshot) => {
+      const normalizedBookings = normalizeBookings(snapshot.val())
+      setBookings(normalizedBookings)
+      void syncExpiredPendingBookings(normalizedBookings)
+    }, (error) => {
+      console.error('Firebase error loading booking users:', error)
+      setBookings([])
+    })
+
+    const unsubscribeUsers = onValue(usersRef, (snapshot) => {
+      setUsersData(snapshot.val())
+    }, (error) => {
+      console.error('Firebase error loading users:', error)
+      setUsersData(null)
+    })
+
+    return () => {
+      unsubscribeBookings()
+      unsubscribeUsers()
+    }
+  }, [])
+
+  const users = useMemo(() => normalizeUsers(usersData, bookings, user), [usersData, bookings, user])
+
+  const filteredUsers = users.filter((item) => {
+    const matchesSearch = (
+      (item.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (item.email || '').toLowerCase().includes(searchTerm.toLowerCase())
+    )
+
+    const matchesStatus = statusFilter === 'all' || item.status === statusFilter
     return matchesSearch && matchesStatus
   })
 
   const stats = {
     total: users.length,
-    active: users.filter(u => u.status === 'active').length,
-    inactive: users.filter(u => u.status === 'inactive').length,
-    admins: users.filter(u => u.role === 'admin').length
+    active: users.filter((item) => item.status === 'active').length,
+    inactive: users.filter((item) => item.status === 'inactive').length,
+    admins: users.filter((item) => item.role === 'admin').length
   }
 
   return (
     <div className="admin-users-container">
-      {/* Stats Grid */}
       <div className="admin-stats-grid">
         <div className="stat-card">
           <div className="stat-icon" style={{ background: '#e0f2fe', color: '#0369a1' }}>
@@ -117,39 +98,35 @@ const AdminUsers = () => {
         </div>
       </div>
 
-      {/* Users Table */}
       <div className="admin-card">
         <div className="card-header">
           <div className="header-left">
             <h3>User Management</h3>
             <div className="search-box">
               <i className="fas fa-search"></i>
-              <input 
-                type="text" 
-                placeholder="Search users..." 
+              <input
+                type="text"
+                placeholder="Search users..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(event) => setSearchTerm(event.target.value)}
               />
             </div>
-            <select 
+            <select
               className="status-filter"
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              onChange={(event) => setStatusFilter(event.target.value)}
             >
               <option value="all">All Status</option>
               <option value="active">Active</option>
               <option value="inactive">Inactive</option>
             </select>
           </div>
-          <button className="add-btn">
-            <i className="fas fa-user-plus"></i> Add User
-          </button>
         </div>
 
         {filteredUsers.length === 0 ? (
           <div className="empty-state">
             <i className="fas fa-users-slash"></i>
-            <p>No users found matching your criteria</p>
+            <p>No users found in the database yet.</p>
           </div>
         ) : (
           <div className="table-responsive">
@@ -166,49 +143,49 @@ const AdminUsers = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredUsers.map((user) => (
-                  <tr key={user.id}>
+                {filteredUsers.map((item) => (
+                  <tr key={item.id}>
                     <td data-label="User">
                       <div className="user-info">
                         <div className="user-avatar">
-                          {user.name.charAt(0)}
+                          {(item.name || 'U').charAt(0)}
                         </div>
                         <div className="user-details">
-                          <span className="user-name">{user.name}</span>
-                          <span className="user-email">{user.email}</span>
+                          <span className="user-name">{item.name}</span>
+                          <span className="user-email">{item.email}</span>
                         </div>
                       </div>
                     </td>
                     <td data-label="Contact">
-                      <span className="contact-info">{user.phone}</span>
+                      <span className="contact-info">{item.phone || 'N/A'}</span>
                     </td>
                     <td data-label="Role">
-                      <span className={`role-badge ${user.role}`}>
-                        {user.role === 'admin' ? <i className="fas fa-shield-alt"></i> : <i className="fas fa-user"></i>}
-                        {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                      <span className={`role-badge ${item.role}`}>
+                        {item.role === 'admin' ? <i className="fas fa-shield-alt"></i> : <i className="fas fa-user"></i>}
+                        {item.role.charAt(0).toUpperCase() + item.role.slice(1)}
                       </span>
                     </td>
                     <td data-label="Status">
-                      <span className={`status-badge ${user.status}`}>
-                        <i className={`fas ${user.status === 'active' ? 'fa-check-circle' : 'fa-times-circle'}`}></i>
-                        {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
+                      <span className={`status-badge ${item.status}`}>
+                        <i className={`fas ${item.status === 'active' ? 'fa-check-circle' : 'fa-times-circle'}`}></i>
+                        {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
                       </span>
                     </td>
                     <td data-label="Joined">
-                      <span className="date">{new Date(user.joinedDate).toLocaleDateString('en-PH')}</span>
+                      <span className="date">{formatDate(item.joinedDate)}</span>
                     </td>
                     <td data-label="Bookings">
-                      <span className="booking-count">{user.totalBookings}</span>
+                      <span className="booking-count">{item.totalBookings || 0}</span>
                     </td>
                     <td data-label="Actions">
                       <div className="action-btns">
-                        <button className="view-btn" title="View Details">
+                        <button className="view-btn" title="View Details" disabled>
                           <i className="fas fa-eye"></i>
                         </button>
-                        <button className="edit-btn" title="Edit User">
+                        <button className="edit-btn" title="Edit User" disabled>
                           <i className="fas fa-edit"></i>
                         </button>
-                        <button className="delete-btn" title="Delete User">
+                        <button className="delete-btn" title="Delete User" disabled>
                           <i className="fas fa-trash-alt"></i>
                         </button>
                       </div>

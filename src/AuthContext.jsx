@@ -1,58 +1,79 @@
-import { createContext, useContext, useState, useEffect } from 'react';
-import { onAuthChange, signInWithGoogle, logOut } from './firebase';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import { hydrateGuestSession, logOut, signInWithEmailPassword, signUpWithEmailPassword } from './firebase'
 
-const AuthContext = createContext();
+const AuthContext = createContext(null)
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
+  const context = useContext(AuthContext)
+
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error('useAuth must be used within an AuthProvider')
   }
-  return context;
-};
+
+  return context
+}
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const unsubscribe = onAuthChange((user) => {
-      setUser(user);
-      setLoading(false);
-    });
+    let active = true
 
-    return () => unsubscribe();
-  }, []);
+    hydrateGuestSession()
+      .then((session) => {
+        if (active) {
+          setUser(session)
+        }
+      })
+      .catch((error) => {
+        console.error('Failed to hydrate guest session:', error)
+        if (active) {
+          setUser(null)
+        }
+      })
+      .finally(() => {
+        if (active) {
+          setLoading(false)
+        }
+      })
 
-  const login = async () => {
-    try {
-      await signInWithGoogle();
-    } catch (error) {
-      console.error('Error signing in with Google:', error);
+    return () => {
+      active = false
     }
-  };
+  }, [])
+
+  const loginWithEmail = async (email, password) => {
+    const session = await signInWithEmailPassword(email, password)
+    setUser(session)
+    return session
+  }
+
+  const signUpWithEmail = async (email, password, firstName, lastName) => {
+    const session = await signUpWithEmailPassword(email, password, firstName, lastName)
+    setUser(session)
+    return session
+  }
 
   const logout = async () => {
-    try {
-      await logOut();
-    } catch (error) {
-      console.error('Error signing out:', error);
-    }
-  };
+    await logOut()
+    setUser(null)
+  }
 
-  const value = {
+  const value = useMemo(() => ({
     user,
     loading,
-    login,
+    loginWithEmail,
+    signUpWithEmail,
     logout,
     isAuthenticated: !!user
-  };
+  }), [user, loading])
 
   return (
     <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
-  );
-};
+  )
+}
 
-export default AuthContext;
+export default AuthContext

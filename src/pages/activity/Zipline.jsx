@@ -1,7 +1,10 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { onValue, ref } from 'firebase/database'
+import { db } from '../../firebase'
 import Navbar from '../../components/Navbar'
 import Footer from '../../components/Footer'
+import PageLoader from '../../components/PageLoader'
 
 // Assets
 import ziplineHeroImg from '../../assets/images/ziplinehero.webp'
@@ -9,14 +12,64 @@ import ziplineImg1 from '../../assets/images/zipline/unnamed (8).webp'
 import ziplineImg2 from '../../assets/images/zipline/unnamed (9).webp'
 import ziplineImg3 from '../../assets/images/zipline/unnamed (10).webp'
 import ziplineMain from '../../assets/images/zipline.webp'
+import { preloadImages } from '../../utils/pageLoad'
 
 // Styles
 import './Zipline.css'
 
 const Zipline = () => {
+  const [pageReady, setPageReady] = useState(false)
+  const [ziplineSettings, setZiplineSettings] = useState({
+    localPrice: 300,
+    touristPrice: 500,
+    dailyLimit: 20
+  })
+
   // Scroll to top on mount
   useEffect(() => {
     window.scrollTo(0, 0)
+  }, [])
+
+  useEffect(() => {
+    const settingsRef = ref(db, 'zipline')
+    const unsubscribe = onValue(
+      settingsRef,
+      (snapshot) => {
+        if (snapshot.exists()) {
+          const data = snapshot.val()
+          setZiplineSettings({
+            localPrice: data.localPrice || 300,
+            touristPrice: data.touristPrice || 500,
+            dailyLimit: data.dailyLimit || 20
+          })
+        }
+      },
+      (error) => {
+        console.error('Error loading zipline settings:', error)
+      }
+    )
+
+    return () => unsubscribe()
+  }, [])
+
+  useEffect(() => {
+    let active = true
+
+    preloadImages([
+      ziplineHeroImg,
+      ziplineImg1,
+      ziplineImg2,
+      ziplineImg3,
+      ziplineMain
+    ]).finally(() => {
+      if (active) {
+        setPageReady(true)
+      }
+    })
+
+    return () => {
+      active = false
+    }
   }, [])
 
   const stats = [
@@ -29,14 +82,14 @@ const Zipline = () => {
   const pricing = [
     {
       title: 'Sablayeño',
-      price: '300',
+      price: ziplineSettings.localPrice.toString(),
       desc: 'Special rate for local residents of Sablayan.',
       features: ['Full Zipline Flight', 'Safety Equipment', 'Professional Guide', 'Valid ID Required'],
       type: 'local'
     },
     {
       title: 'Tourist',
-      price: '500',
+      price: ziplineSettings.touristPrice.toString(),
       desc: 'Standard rate for all visitors and tourists.',
       features: ['Full Zipline Flight', 'Safety Equipment', 'Professional Guide', 'Insurance Included'],
       type: 'tourist',
@@ -64,6 +117,7 @@ const Zipline = () => {
 
   return (
     <div className="zipline-v3">
+      {!pageReady && <PageLoader text="Loading zipline views..." />}
       <Navbar />
 
       {/* 1. HERO SECTION */}

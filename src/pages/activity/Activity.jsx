@@ -1,16 +1,34 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Routes, Route, Link, useLocation, Outlet } from 'react-router-dom'
 import Navbar from '../../components/Navbar'
 import Footer from '../../components/Footer'
+import PageLoader from '../../components/PageLoader'
 import divingImg from '../../assets/images/diving.webp'
 import activityVideo from '../../assets/images/activity.mp4'
 import ziplineImg from '../../assets/images/zipline.webp'
 import Diving from './Diving'
 import Zipline from './Zipline'
+import { preloadImages } from '../../utils/pageLoad'
 import './Activity.css'
 
 const Activity = () => {
   const location = useLocation()
+  const [imagesReady, setImagesReady] = useState(false)
+  const [videoReady, setVideoReady] = useState(false)
+
+  useEffect(() => {
+    let active = true
+
+    preloadImages([divingImg, ziplineImg]).finally(() => {
+      if (active) {
+        setImagesReady(true)
+      }
+    })
+
+    return () => {
+      active = false
+    }
+  }, [])
   
   // Check if it's a sub-route
   if (location.pathname !== '/activity') {
@@ -44,6 +62,9 @@ const Activity = () => {
 
   return (
     <div className="activity-page">
+      {(!imagesReady || !videoReady) && (
+        <PageLoader text="Loading activities and media..." />
+      )}
       <Navbar />
       
       {/* Hero Section */}
@@ -54,6 +75,8 @@ const Activity = () => {
           muted 
           loop 
           playsInline
+          preload="auto"
+          onLoadedData={() => setVideoReady(true)}
         >
           <source src={activityVideo} type="video/mp4" />
         </video>

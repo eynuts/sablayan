@@ -1,10 +1,15 @@
+import { useState } from 'react'
 import Navbar from '../../components/Navbar'
 import Footer from '../../components/Footer'
+import PageLoader from '../../components/PageLoader'
 import './Location.css'
 
 const Location = () => {
+  const [mapLoaded, setMapLoaded] = useState(false)
+
   return (
     <div className="location-page">
+      {!mapLoaded && <PageLoader text="Loading map and directions..." />}
       <Navbar />
       
       {/* Hero Section */}
@@ -30,6 +35,7 @@ const Location = () => {
               loading="lazy" 
               referrerPolicy="no-referrer-when-downgrade"
               title="Sablayan Adventure Camp Location"
+              onLoad={() => setMapLoaded(true)}
             ></iframe>
           </div>
         </div>
