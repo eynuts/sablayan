@@ -1,8 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { onValue, ref, set } from 'firebase/database'
 import { BOOKING_TIMEZONE, CHECK_IN_TIME, CHECK_OUT_TIME } from '../../utils/bookingPolicy'
+import { db } from '../../firebase'
 import './AdminSettings.css'
 
 const AdminSettings = () => {
+  const [loading, setLoading] = useState(true)
+  const [isSaving, setIsSaving] = useState(false)
   const [settings, setSettings] = useState({
     siteName: 'Sablayan Adventure Camp',
     siteEmail: 'sablayanadventurecamp@gmail.com',
@@ -12,10 +16,37 @@ const AdminSettings = () => {
     currency: 'PHP',
     checkInTime: CHECK_IN_TIME,
     checkOutTime: CHECK_OUT_TIME,
+    seniorDiscountPercent: 0,
+    childDiscountPercent: 0,
     maintenanceMode: false,
     emailNotifications: true,
     smsNotifications: true
   })
+
+  useEffect(() => {
+    const settingsRef = ref(db, 'settings/general')
+    const unsubscribe = onValue(
+      settingsRef,
+      (snapshot) => {
+        if (snapshot.exists()) {
+          setSettings((prev) => ({
+            ...prev,
+            ...snapshot.val(),
+            seniorDiscountPercent: Number(snapshot.val().seniorDiscountPercent || 0),
+            childDiscountPercent: Number(snapshot.val().childDiscountPercent || 0)
+          }))
+        }
+
+        setLoading(false)
+      },
+      (error) => {
+        console.error('Error loading admin settings:', error)
+        setLoading(false)
+      }
+    )
+
+    return () => unsubscribe()
+  }, [])
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
@@ -25,8 +56,36 @@ const AdminSettings = () => {
     })
   }
 
-  const handleSave = () => {
-    alert('Settings saved successfully!')
+  const handleSave = async () => {
+    const seniorDiscountPercent = Number(settings.seniorDiscountPercent || 0)
+    const childDiscountPercent = Number(settings.childDiscountPercent || 0)
+
+    if (seniorDiscountPercent < 0 || seniorDiscountPercent > 100 || childDiscountPercent < 0 || childDiscountPercent > 100) {
+      alert('Discount percentages must be between 0 and 100.')
+      return
+    }
+
+    setIsSaving(true)
+
+    try {
+      await set(ref(db, 'settings/general'), {
+        ...settings,
+        seniorDiscountPercent,
+        childDiscountPercent,
+        updatedAt: new Date().toISOString()
+      })
+
+      alert('Settings saved successfully!')
+    } catch (error) {
+      console.error('Failed to save settings:', error)
+      alert('Failed to save settings. Please try again.')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  if (loading) {
+    return <div className="admin-settings-loading">Loading settings...</div>
   }
 
   return (
@@ -34,8 +93,8 @@ const AdminSettings = () => {
       <div className="admin-card">
         <div className="card-header">
           <h3>General Settings</h3>
-          <button className="save-btn" onClick={handleSave}>
-            <i className="fas fa-save"></i> Save Changes
+          <button className="save-btn" onClick={handleSave} disabled={isSaving}>
+            <i className="fas fa-save"></i> {isSaving ? 'Saving...' : 'Save Changes'}
           </button>
         </div>
 
@@ -127,6 +186,36 @@ const AdminSettings = () => {
                   value={settings.checkOutTime}
                   onChange={handleChange}
                 />
+              </div>
+              <div className="form-group">
+                <label>Matanda Discount (%)</label>
+                <input
+                  type="number"
+                  name="seniorDiscountPercent"
+                  value={settings.seniorDiscountPercent}
+                  onChange={handleChange}
+                  min="0"
+                  max="100"
+                />
+              </div>
+              <div className="form-group">
+                <label>Bata Discount (%)</label>
+                <input
+                  type="number"
+                  name="childDiscountPercent"
+                  value={settings.childDiscountPercent}
+                  onChange={handleChange}
+                  min="0"
+                  max="100"
+                />
+              </div>
+              <div className="form-group full-width">
+                <label>Discount Notes</label>
+                <textarea
+                  value={`Matanda: ${settings.seniorDiscountPercent}% off | Bata: ${settings.childDiscountPercent}% off\nSet 0 if you do not want to apply a discount.`}
+                  readOnly
+                  rows={2}
+                ></textarea>
               </div>
             </div>
           </div>

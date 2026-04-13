@@ -304,12 +304,38 @@ const Payment = () => {
                         <span>Duration</span>
                         <span>15-20 minutes</span>
                       </div>
+                      <div className="detail-row">
+                        <span>Regular Guests</span>
+                        <span>{bookingData.regularGuests || 0}</span>
+                      </div>
+                      <div className="detail-row">
+                        <span>Matanda</span>
+                        <span>{bookingData.seniorGuests || 0} ({bookingData.seniorDiscountPercent || 0}% off)</span>
+                      </div>
+                      <div className="detail-row">
+                        <span>Bata</span>
+                        <span>{bookingData.childGuests || 0} ({bookingData.childDiscountPercent || 0}% off)</span>
+                      </div>
+                      <div className="detail-row">
+                        <span>Base Amount</span>
+                        <span>₱{Number(bookingData.baseAmount || 0).toLocaleString()}</span>
+                      </div>
+                      <div className="detail-row">
+                        <span>Total Discount</span>
+                        <span>-₱{Number(bookingData.discountAmount || 0).toLocaleString()}</span>
+                      </div>
                     </>
                   )}
                   <div className="detail-row">
                     <span>Guests</span>
                     <span>{bookingData.guests} guest(s)</span>
                   </div>
+                  {bookingData.type === 'zipline' && (
+                    <div className="detail-row">
+                      <span>Final Amount</span>
+                      <span>₱{Number(bookingData.totalAmount || 0).toLocaleString()}</span>
+                    </div>
+                  )}
                   <div className="detail-row total">
                     <span>Deposit Amount (50%)</span>
                     <span>₱{bookingData.depositAmount?.toLocaleString()}</span>

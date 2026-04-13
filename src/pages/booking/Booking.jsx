@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { onValue, ref } from 'firebase/database'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import Navbar from '../../components/Navbar'
 import Footer from '../../components/Footer'
 import { useAuth } from '../../AuthContext'
@@ -10,19 +11,84 @@ import { preloadImage } from '../../utils/pageLoad'
 import { CHECK_IN_TIME, CHECK_OUT_TIME, formatPolicyTime } from '../../utils/bookingPolicy'
 import './Booking.css'
 
+const clampNumber = (value, min, max) => Math.min(Math.max(Number(value) || 0, min), max)
+
+const calculateNights = (checkIn, checkOut) => {
+  if (!checkIn || !checkOut) {
+    return 0
+  }
+
+  const start = new Date(checkIn)
+  const end = new Date(checkOut)
+  start.setHours(0, 0, 0, 0)
+  end.setHours(0, 0, 0, 0)
+  const diffDays = Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
+  return Number.isFinite(diffDays) && diffDays > 0 ? diffDays : 0
+}
+
+const calculateZiplinePricing = ({
+  pricePerPerson,
+  totalGuests,
+  seniorGuests,
+  childGuests,
+  seniorDiscountPercent,
+  childDiscountPercent
+}) => {
+  const normalizedTotalGuests = clampNumber(totalGuests, 1, 10)
+  const normalizedSeniorGuests = clampNumber(seniorGuests, 0, normalizedTotalGuests)
+  const normalizedChildGuests = clampNumber(childGuests, 0, normalizedTotalGuests - normalizedSeniorGuests)
+  const regularGuests = Math.max(normalizedTotalGuests - (normalizedSeniorGuests + normalizedChildGuests), 0)
+
+  const baseAmount = Number(pricePerPerson || 0) * normalizedTotalGuests
+  const seniorDiscountAmount = Math.round(Number(pricePerPerson || 0) * normalizedSeniorGuests * (Number(seniorDiscountPercent || 0) / 100))
+  const childDiscountAmount = Math.round(Number(pricePerPerson || 0) * normalizedChildGuests * (Number(childDiscountPercent || 0) / 100))
+  const discountAmount = seniorDiscountAmount + childDiscountAmount
+  const totalAmount = Math.max(baseAmount - discountAmount, 0)
+  const depositAmount = Math.round(totalAmount * 0.5)
+
+  return {
+    totalGuests: normalizedTotalGuests,
+    seniorGuests: normalizedSeniorGuests,
+    childGuests: normalizedChildGuests,
+    regularGuests,
+    baseAmount,
+    seniorDiscountAmount,
+    childDiscountAmount,
+    discountAmount,
+    totalAmount,
+    depositAmount
+  }
+}
+
 const Booking = () => {
   const { user } = useAuth()
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
+  const prefersReducedMotion = useReducedMotion()
   const roomParam = searchParams.get('room')
+  const typeParam = searchParams.get('type')
   const [rooms, setRooms] = useState([])
   const [ziplineSettings, setZiplineSettings] = useState({
     localPrice: 300,
     touristPrice: 500,
     dailyLimit: 20
   })
+  const [discountSettings, setDiscountSettings] = useState({
+    seniorDiscountPercent: 0,
+    childDiscountPercent: 0
+  })
   const [roomsLoading, setRoomsLoading] = useState(true)
-  const [bookingType, setBookingType] = useState(roomParam ? 'room' : 'zipline')
+  const [bookingType, setBookingType] = useState(() => {
+    if (roomParam) {
+      return 'room'
+    }
+
+    if (typeParam === 'room' || typeParam === 'zipline') {
+      return typeParam
+    }
+
+    return 'zipline'
+  })
   const [currentRoomId, setCurrentRoomId] = useState(roomParam || '')
   const [ziplineType, setZiplineType] = useState('tourist')
   const [showActivitySelector, setShowActivitySelector] = useState(false)
@@ -35,6 +101,8 @@ const Booking = () => {
     checkOut: '',
     date: '',
     guests: 1,
+    seniorGuests: 0,
+    childGuests: 0,
     message: ''
   })
 
@@ -45,6 +113,23 @@ const Booking = () => {
       email: user?.email || ''
     }))
   }, [user])
+
+  useEffect(() => {
+    if (roomParam) {
+      setBookingType('room')
+      setCurrentRoomId(roomParam)
+      return
+    }
+
+    if (typeParam === 'room') {
+      setBookingType('room')
+      return
+    }
+
+    if (typeParam === 'zipline') {
+      setBookingType('zipline')
+    }
+  }, [roomParam, typeParam])
 
   useEffect(() => {
     const ziplineRef = ref(db, 'zipline')
@@ -62,6 +147,33 @@ const Booking = () => {
       },
       (error) => {
         console.error('Error loading zipline settings:', error)
+      }
+    )
+
+    return () => unsubscribe()
+  }, [])
+
+  useEffect(() => {
+    const settingsRef = ref(db, 'settings/general')
+    const unsubscribe = onValue(
+      settingsRef,
+      (snapshot) => {
+        if (!snapshot.exists()) {
+          setDiscountSettings({
+            seniorDiscountPercent: 0,
+            childDiscountPercent: 0
+          })
+          return
+        }
+
+        const data = snapshot.val()
+        setDiscountSettings({
+          seniorDiscountPercent: Number(data.seniorDiscountPercent || 0),
+          childDiscountPercent: Number(data.childDiscountPercent || 0)
+        })
+      },
+      (error) => {
+        console.error('Error loading discount settings:', error)
       }
     )
 
@@ -112,6 +224,25 @@ const Booking = () => {
 
   const currentRoom = rooms.find((room) => room.id === currentRoomId) || null
   const currentPrice = bookingType === 'room' ? (currentRoom?.price || 0) : (ziplineType === 'local' ? ziplineSettings.localPrice : ziplineSettings.touristPrice)
+  const nights = useMemo(() => calculateNights(formData.checkIn, formData.checkOut), [formData.checkIn, formData.checkOut])
+
+  const ziplinePricing = useMemo(() => (
+    calculateZiplinePricing({
+      pricePerPerson: currentPrice,
+      totalGuests: formData.guests,
+      seniorGuests: formData.seniorGuests,
+      childGuests: formData.childGuests,
+      seniorDiscountPercent: discountSettings.seniorDiscountPercent,
+      childDiscountPercent: discountSettings.childDiscountPercent
+    })
+  ), [
+    currentPrice,
+    formData.childGuests,
+    formData.guests,
+    formData.seniorGuests,
+    discountSettings.childDiscountPercent,
+    discountSettings.seniorDiscountPercent
+  ])
 
   useEffect(() => {
     if (roomsLoading) {
@@ -148,10 +279,46 @@ const Booking = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value
-    }))
+    setFormData((prev) => {
+      if (name === 'guests') {
+        const nextGuests = Number(value || 0)
+        const nextSeniorGuests = Math.min(Number(prev.seniorGuests || 0), nextGuests)
+        const remainingGuests = Math.max(nextGuests - nextSeniorGuests, 0)
+        const nextChildGuests = Math.min(Number(prev.childGuests || 0), remainingGuests)
+
+        return {
+          ...prev,
+          guests: value,
+          seniorGuests: nextSeniorGuests,
+          childGuests: nextChildGuests
+        }
+      }
+
+      if (name === 'seniorGuests') {
+        const nextSeniorGuests = Math.min(Number(value || 0), Number(prev.guests || 0))
+        const remainingGuests = Math.max(Number(prev.guests || 0) - nextSeniorGuests, 0)
+        const nextChildGuests = Math.min(Number(prev.childGuests || 0), remainingGuests)
+
+        return {
+          ...prev,
+          seniorGuests: nextSeniorGuests,
+          childGuests: nextChildGuests
+        }
+      }
+
+      if (name === 'childGuests') {
+        const maxChildGuests = Math.max(Number(prev.guests || 0) - Number(prev.seniorGuests || 0), 0)
+        return {
+          ...prev,
+          childGuests: Math.min(Number(value || 0), maxChildGuests)
+        }
+      }
+
+      return {
+        ...prev,
+        [name]: value
+      }
+    })
   }
 
   const handleRoomSelect = () => {
@@ -223,7 +390,10 @@ const Booking = () => {
         email: user.email,
         phone: formData.phone,
         date: formData.date,
-        guests: formData.guests,
+        guests: ziplinePricing.totalGuests,
+        seniorGuests: ziplinePricing.seniorGuests,
+        childGuests: ziplinePricing.childGuests,
+        regularGuests: ziplinePricing.regularGuests,
         ziplineType: ziplineType,
         message: formData.message,
         activity: {
@@ -231,11 +401,60 @@ const Booking = () => {
           price: price,
           description: `Zipline experience - ${ziplineType === 'local' ? 'Sablayeño' : 'Tourist'} Rate`
         },
-        depositAmount: Math.round(price * formData.guests * 0.5)
+        baseAmount: ziplinePricing.baseAmount,
+        discountAmount: ziplinePricing.discountAmount,
+        totalAmount: ziplinePricing.totalAmount,
+        seniorDiscountPercent: discountSettings.seniorDiscountPercent,
+        childDiscountPercent: discountSettings.childDiscountPercent,
+        seniorDiscountAmount: ziplinePricing.seniorDiscountAmount,
+        childDiscountAmount: ziplinePricing.childDiscountAmount,
+        depositAmount: ziplinePricing.depositAmount
       }
 
       navigate('/payment', { state: { bookingData } })
     }
+  }
+
+  const updateGuestCount = (field, delta) => {
+    setFormData((prev) => {
+      if (field === 'guests') {
+        const nextGuests = clampNumber(Number(prev.guests || 0) + delta, 1, 10)
+        const nextSeniorGuests = Math.min(Number(prev.seniorGuests || 0), nextGuests)
+        const remainingGuests = Math.max(nextGuests - nextSeniorGuests, 0)
+        const nextChildGuests = Math.min(Number(prev.childGuests || 0), remainingGuests)
+
+        return {
+          ...prev,
+          guests: nextGuests,
+          seniorGuests: nextSeniorGuests,
+          childGuests: nextChildGuests
+        }
+      }
+
+      if (field === 'seniorGuests') {
+        const maxSeniorGuests = Number(prev.guests || 0)
+        const nextSeniorGuests = clampNumber(Number(prev.seniorGuests || 0) + delta, 0, maxSeniorGuests)
+        const remainingGuests = Math.max(Number(prev.guests || 0) - nextSeniorGuests, 0)
+        const nextChildGuests = Math.min(Number(prev.childGuests || 0), remainingGuests)
+
+        return {
+          ...prev,
+          seniorGuests: nextSeniorGuests,
+          childGuests: nextChildGuests
+        }
+      }
+
+      if (field === 'childGuests') {
+        const maxChildGuests = Math.max(Number(prev.guests || 0) - Number(prev.seniorGuests || 0), 0)
+        const nextChildGuests = clampNumber(Number(prev.childGuests || 0) + delta, 0, maxChildGuests)
+        return {
+          ...prev,
+          childGuests: nextChildGuests
+        }
+      }
+
+      return prev
+    })
   }
 
   return (
@@ -243,19 +462,29 @@ const Booking = () => {
       {(!pageReady || roomsLoading) && <PageLoader text="Loading available rooms..." />}
       <Navbar />
 
-      <section className="booking-hero">
+      <motion.section
+        className="booking-hero"
+        initial={prefersReducedMotion ? false : { opacity: 0 }}
+        animate={prefersReducedMotion ? false : { opacity: 1 }}
+        transition={{ duration: 0.35, ease: 'easeOut' }}
+      >
         <div className="booking-hero-overlay"></div>
         <div className="booking-hero-content">
           <span className="section-tag">Sablayan Adventure Camp</span>
           <h1>Book Your Stay</h1>
           <p>Reserve your perfect accommodation in paradise</p>
         </div>
-      </section>
+      </motion.section>
 
       <section className="booking-main-section">
         <div className="section-container">
           <div className="booking-layout">
-            <div className="booking-form-card">
+            <motion.div
+              className="booking-form-card"
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 10 }}
+              animate={prefersReducedMotion ? false : { opacity: 1, y: 0 }}
+              transition={{ duration: 0.35, ease: 'easeOut' }}
+            >
               <div className="booking-form-header">
                 <h3>Complete Your Booking</h3>
                 <p>Fill in your details to reserve your room</p>
@@ -323,21 +552,70 @@ const Booking = () => {
                     />
                   </div>
                   <div className="form-group">
-                    <label htmlFor="guests">Number of Guests</label>
-                    <select
-                      id="guests"
-                      name="guests"
-                      value={formData.guests}
-                      onChange={handleChange}
-                    >
-                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
-                        <option key={num} value={num}>
-                          {num} {num === 1 ? 'Guest' : 'Guests'}
-                        </option>
-                      ))}
-                    </select>
+                    <label>Guests</label>
+                    <div className="guest-picker">
+                      <button type="button" className="guest-btn" onClick={() => updateGuestCount('guests', -1)} aria-label="Decrease guests">
+                        <i className="fas fa-minus"></i>
+                      </button>
+                      <div className="guest-value" aria-live="polite">
+                        <strong>{ziplinePricing.totalGuests}</strong>
+                        <span>Total</span>
+                      </div>
+                      <button type="button" className="guest-btn" onClick={() => updateGuestCount('guests', 1)} aria-label="Increase guests">
+                        <i className="fas fa-plus"></i>
+                      </button>
+                    </div>
+                    <div className="guest-hint">Max 10 guests per booking.</div>
                   </div>
                 </div>
+
+                {bookingType === 'zipline' && (
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>Matanda</label>
+                      <div className="guest-picker compact">
+                        <button type="button" className="guest-btn" onClick={() => updateGuestCount('seniorGuests', -1)} aria-label="Decrease matanda">
+                          <i className="fas fa-minus"></i>
+                        </button>
+                        <div className="guest-value" aria-live="polite">
+                          <strong>{ziplinePricing.seniorGuests}</strong>
+                          <span>{discountSettings.seniorDiscountPercent}% off</span>
+                        </div>
+                        <button type="button" className="guest-btn" onClick={() => updateGuestCount('seniorGuests', 1)} aria-label="Increase matanda">
+                          <i className="fas fa-plus"></i>
+                        </button>
+                      </div>
+                    </div>
+                    <div className="form-group">
+                      <label>Bata</label>
+                      <div className="guest-picker compact">
+                        <button type="button" className="guest-btn" onClick={() => updateGuestCount('childGuests', -1)} aria-label="Decrease bata">
+                          <i className="fas fa-minus"></i>
+                        </button>
+                        <div className="guest-value" aria-live="polite">
+                          <strong>{ziplinePricing.childGuests}</strong>
+                          <span>{discountSettings.childDiscountPercent}% off</span>
+                        </div>
+                        <button type="button" className="guest-btn" onClick={() => updateGuestCount('childGuests', 1)} aria-label="Increase bata">
+                          <i className="fas fa-plus"></i>
+                        </button>
+                      </div>
+                      <div className="guest-hint subtle">
+                        Regular: <strong>{ziplinePricing.regularGuests}</strong>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {bookingType === 'zipline' && (
+                  <div className="booking-auth-notice">
+                    <i className="fas fa-tags"></i>
+                    <p>
+                      Matanda discount: <strong>{discountSettings.seniorDiscountPercent}% off</strong> and
+                      bata discount: <strong>{discountSettings.childDiscountPercent}% off</strong>.
+                    </p>
+                  </div>
+                )}
 
                 <div className="form-row">
                   {bookingType === 'room' ? (
@@ -397,12 +675,17 @@ const Booking = () => {
 
                 <button type="submit" className="submit-btn">
                   <i className="fas fa-credit-card"></i>
-                  Pay
+                  Pay {bookingType === 'zipline' ? `₱${ziplinePricing.depositAmount.toLocaleString('en-PH')}` : ''}
                 </button>
               </form>
-            </div>
+            </motion.div>
 
-            <div className="room-display-card">
+            <motion.div
+              className="room-display-card"
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 10 }}
+              animate={prefersReducedMotion ? false : { opacity: 1, y: 0 }}
+              transition={{ duration: 0.35, ease: 'easeOut', delay: prefersReducedMotion ? 0 : 0.05 }}
+            >
               <div className="room-display-header">
                 <span className="section-tag">{bookingType === 'room' ? 'Your Selected Room' : 'Zipline Adventure'}</span>
                 <h3>
@@ -442,6 +725,17 @@ const Booking = () => {
 
                     <p className="room-display-description">{currentRoom.description}</p>
 
+                    <div className="pricing-breakdown">
+                      <div className="pricing-row">
+                        <span>Nights</span>
+                        <strong>{nights || '—'}</strong>
+                      </div>
+                      <div className="pricing-row">
+                        <span>Deposit (50%)</span>
+                        <strong>₱{Math.round((currentRoom?.price || 0) * 0.5).toLocaleString('en-PH')}</strong>
+                      </div>
+                    </div>
+
                     <div className="room-display-capacity">
                       <i className="fas fa-user-friends"></i>
                       <span>{currentRoom.capacity}</span>
@@ -465,6 +759,36 @@ const Booking = () => {
                     <i className="fas fa-info-circle"></i>
                     <span>1.7 km over water • 15-20 minutes</span>
                   </div>
+
+                  <div className="booking-policy-strip">
+                    <div className="booking-policy-item">
+                      <span className="booking-policy-label">Matanda</span>
+                      <strong>{discountSettings.seniorDiscountPercent}% off</strong>
+                    </div>
+                    <div className="booking-policy-item">
+                      <span className="booking-policy-label">Bata</span>
+                      <strong>{discountSettings.childDiscountPercent}% off</strong>
+                    </div>
+                  </div>
+
+                  <div className="pricing-breakdown">
+                    <div className="pricing-row">
+                      <span>Base</span>
+                      <strong>₱{ziplinePricing.baseAmount.toLocaleString('en-PH')}</strong>
+                    </div>
+                    <div className="pricing-row">
+                      <span>Discount</span>
+                      <strong className={ziplinePricing.discountAmount > 0 ? 'negative' : ''}>-₱{ziplinePricing.discountAmount.toLocaleString('en-PH')}</strong>
+                    </div>
+                    <div className="pricing-row total">
+                      <span>Total</span>
+                      <strong>₱{ziplinePricing.totalAmount.toLocaleString('en-PH')}</strong>
+                    </div>
+                    <div className="pricing-row deposit">
+                      <span>Deposit (50%)</span>
+                      <strong>₱{ziplinePricing.depositAmount.toLocaleString('en-PH')}</strong>
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -476,14 +800,29 @@ const Booking = () => {
                 <i className={`fas fa-${bookingType === 'room' ? 'bed' : 'wind'}`}></i>
                 {bookingType === 'room' ? 'Choose Room' : 'Change Activity'}
               </button>
-            </div>
+            </motion.div>
           </div>
         </div>
       </section>
 
-      {showActivitySelector && (
-        <div className="room-selector-overlay" onClick={() => setShowActivitySelector(false)}>
-          <div className="room-selector-modal" onClick={(e) => e.stopPropagation()}>
+      <AnimatePresence>
+        {showActivitySelector && (
+          <motion.div
+            className="room-selector-overlay"
+            onClick={() => setShowActivitySelector(false)}
+            initial={prefersReducedMotion ? false : { opacity: 0 }}
+            animate={prefersReducedMotion ? false : { opacity: 1 }}
+            exit={prefersReducedMotion ? false : { opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <motion.div
+              className="room-selector-modal"
+              onClick={(e) => e.stopPropagation()}
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 10, scale: 0.98 }}
+              animate={prefersReducedMotion ? false : { opacity: 1, y: 0, scale: 1 }}
+              exit={prefersReducedMotion ? false : { opacity: 0, y: 10, scale: 0.98 }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+            >
             <div className="room-selector-header">
               <h3>Select Your Experience</h3>
               <button className="close-btn" onClick={() => setShowActivitySelector(false)}>
@@ -567,9 +906,10 @@ const Booking = () => {
                 </div>
               )}
             </div>
-          </div>
-        </div>
-      )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <section className="contact-section">
         <div className="section-container">

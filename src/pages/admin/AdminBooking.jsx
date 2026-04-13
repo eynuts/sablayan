@@ -366,6 +366,12 @@ const AdminBooking = () => {
                     <p><strong>Activity status:</strong> <span className={`status ${getBookingOperationalStatus(selectedBooking).tone}`}>{getBookingOperationalStatus(selectedBooking).label}</span></p>
                     <p><strong>Status detail:</strong> {getBookingOperationalStatus(selectedBooking).details}</p>
                     <p><strong>Number of Participants:</strong> {selectedBooking.guests || 0}</p>
+                    <p><strong>Regular Guests:</strong> {selectedBooking.regularGuests || 0}</p>
+                    <p><strong>Matanda:</strong> {selectedBooking.seniorGuests || 0} ({selectedBooking.seniorDiscountPercent || 0}% off)</p>
+                    <p><strong>Bata:</strong> {selectedBooking.childGuests || 0} ({selectedBooking.childDiscountPercent || 0}% off)</p>
+                    <p><strong>Base Amount:</strong> {formatCurrency(selectedBooking.baseAmount)}</p>
+                    <p><strong>Total Discount:</strong> {formatCurrency(selectedBooking.discountAmount)}</p>
+                    <p><strong>Final Amount:</strong> {formatCurrency(selectedBooking.totalAmount)}</p>
                   </div>
                 </>
               ) : (

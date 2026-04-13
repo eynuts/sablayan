@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Navbar from '../../components/Navbar'
 import Footer from '../../components/Footer'
 import PageLoader from '../../components/PageLoader'
@@ -11,6 +12,7 @@ import './Home.css'
 
 const Home = () => {
   const [pageReady, setPageReady] = useState(false)
+  const navigate = useNavigate()
 
   useEffect(() => {
     let active = true
@@ -85,8 +87,8 @@ const Home = () => {
           <p className="hero-subtitle">Soar 1.7km across crystal clear waters at Sablayan Adventure Camp.</p>
           
           <div className="hero-cta-group">
-            <button className="hero-primary-btn">Book Adventure</button>
-            <button className="hero-secondary-btn">View Gallery</button>
+            <button className="hero-primary-btn" onClick={() => navigate('/booking?type=zipline')}>Book Adventure</button>
+            <button className="hero-secondary-btn" onClick={() => navigate('/activity')}>View Activities</button>
           </div>
 
           <div className="scroll-indicator">
@@ -259,8 +261,8 @@ const Home = () => {
           <h2>Ready to start your adventure?</h2>
           <p>Book your stay now and experience the thrill of a lifetime.</p>
           <div className="cta-buttons">
-            <button className="cta-btn primary">Book Your Stay</button>
-            <button className="cta-btn secondary">View Activities</button>
+            <button className="cta-btn primary" onClick={() => navigate('/booking?type=room')}>Book Your Stay</button>
+            <button className="cta-btn secondary" onClick={() => navigate('/activity')}>View Activities</button>
           </div>
         </div>
       </section>

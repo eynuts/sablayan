@@ -240,6 +240,89 @@
   flex: 1;
 }
 
+/* Guest picker (interactive counters) */
+.guest-picker {
+  display: grid;
+  grid-template-columns: 44px 1fr 44px;
+  align-items: center;
+  gap: 0.75rem;
+  border: 2px solid #eee;
+  border-radius: 12px;
+  padding: 0.35rem;
+  background: #ffffff;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.guest-picker.compact {
+  grid-template-columns: 40px 1fr 40px;
+}
+
+.guest-picker:focus-within {
+  border-color: #a8d5ba;
+  box-shadow: 0 0 0 4px rgba(168, 213, 186, 0.15);
+}
+
+.guest-btn {
+  height: 44px;
+  width: 44px;
+  border-radius: 10px;
+  border: 1px solid #e8e8e8;
+  background: #f8f9fa;
+  color: #122b36;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.guest-picker.compact .guest-btn {
+  height: 40px;
+  width: 40px;
+}
+
+.guest-btn:hover {
+  background: #ffffff;
+  border-color: #dcefe3;
+  transform: translateY(-1px);
+}
+
+.guest-btn:active {
+  transform: translateY(0);
+}
+
+.guest-value {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.1;
+  padding: 0.25rem 0.5rem;
+}
+
+.guest-value strong {
+  font-size: 1.15rem;
+  color: #122b36;
+}
+
+.guest-value span {
+  font-size: 0.78rem;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.guest-hint {
+  margin-top: 0.4rem;
+  font-size: 0.82rem;
+  color: #6b7280;
+}
+
+.guest-hint.subtle {
+  margin-top: 0.5rem;
+  color: #4b5563;
+}
+
 .submit-btn {
   width: 100%;
   padding: 1rem;
@@ -339,6 +422,43 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+}
+
+.pricing-breakdown {
+  margin-top: 1rem;
+  border: 1px solid #eef2f7;
+  background: #fbfcfe;
+  border-radius: 16px;
+  padding: 1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.pricing-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  color: #334155;
+  font-size: 0.92rem;
+}
+
+.pricing-row strong {
+  color: #122b36;
+}
+
+.pricing-row.total {
+  padding-top: 0.5rem;
+  border-top: 1px dashed #e5e7eb;
+}
+
+.pricing-row.deposit strong {
+  color: #d94e28;
+}
+
+.pricing-row .negative {
+  color: #b42318;
 }
 
 .room-display-price {
