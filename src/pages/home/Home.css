@@ -1,3 +1,8 @@
+/* Home Page Styles
+   Styles for the landing page sections, including hero, featured experiences,
+   amenities, testimonials, and final call-to-action.
+*/
+
 .home-page {
   background-color: #fcfbf9;
   min-height: 100vh;
@@ -80,7 +85,7 @@
   font-weight: 300;
 }
 
-/* Experiences */
+/* Experiences section holds the featured experience cards with hover effects. */
 .explore-experiences {
   padding: 6rem 4rem;
   max-width: 1400px;

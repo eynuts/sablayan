@@ -1,97 +1,169 @@
+/* ============================================
+   AUTH PAGE STYLES
+   ============================================
+   These styles handle the authentication page layout,
+   including the background image, form styling,
+   and responsive adjustments for different devices.
+   ============================================ */
+
+/* --------------------------------------------
+   MAIN PAGE WRAPPER
+   --------------------------------------------
+   This is the outer container that covers the 
+   entire viewport. It locks scrolling and creates
+   a fixed, full-screen experience.
+   -------------------------------------------- */
 .auth-page-wrapper {
-  position: fixed;
-  inset: 0;
-  height: 100dvh;
-  width: 100%;
-  display: flex;
+  position: fixed;        /* Stays in place on screen */
+  inset: 0;               /* Shorthand for top:0, right:0, bottom:0, left:0 */
+  height: 100dvh;         /* Full viewport height (dvh = dynamic viewport height) */
+  width: 100%;            /* Full width */
+  display: flex;        
   flex-direction: column;
-  overflow: hidden !important;
-  touch-action: none;
-  overscroll-behavior: none;
-  z-index: 1000;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  overflow: hidden !important;  /* Prevent scrolling */
+  touch-action: none;           /* Disable touch gestures */
+  overscroll-behavior: none;     /* Prevent bounce effects */
+  z-index: 1000;                /* Stay on top of other elements */
+  scrollbar-width: none;         /* Hide scrollbar (Firefox) */
+  -ms-overflow-style: none;      /* Hide scrollbar (IE/Edge) */
 }
 
+/* Hide scrollbar for Chrome/Safari/Opera */
 .auth-page-wrapper::-webkit-scrollbar {
   display: none;
 }
 
+/* --------------------------------------------
+   MAIN CONTENT AREA
+   --------------------------------------------
+   Contains the background image and centers
+   the authentication form on the screen.
+   -------------------------------------------- */
 .auth-main {
-  flex: 1;
+  flex: 1;                /* Take up remaining space */
   height: 100%;
-  background-size: cover;
-  background-position: center;
+  background-size: cover;       /* Cover entire area */
+  background-position: center;    /* Center the image */
   position: relative;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 20px;
+  align-items: center;            /* Vertical centering */
+  justify-content: center;          /* Horizontal centering */
+  padding: 0 20px;                /* Side padding */
   overflow: hidden;
 }
 
+/* --------------------------------------------
+   DARK OVERLAY
+   --------------------------------------------
+   Semi-transparent dark layer over the background
+   image to make white text more readable.
+   -------------------------------------------- */
 .auth-overlay {
-  position: absolute;
+  position: absolute;     /* Cover the entire auth-main */
   inset: 0;
-  background: linear-gradient(rgba(10, 25, 31, 0.5), rgba(10, 25, 31, 0.8));
+  background: linear-gradient(
+    rgba(10, 25, 31, 0.5),    /* Top: lighter overlay */
+    rgba(10, 25, 31, 0.8)     /* Bottom: darker overlay */
+  );
 }
 
+/* --------------------------------------------
+   AUTH FORM CONTAINER
+   --------------------------------------------
+   Holds the auth card and positions it above
+   the background image.
+   -------------------------------------------- */
 .auth-container {
   width: 100%;
-  max-width: 420px;
+  max-width: 420px;       /* Limit width on larger screens */
   position: relative;
-  z-index: 10;
+  z-index: 10;            /* Sit above the overlay */
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
+/* --------------------------------------------
+   AUTH CARD (GLASSMORPHISM CONTAINER)
+   --------------------------------------------
+   The white/transparent card that holds all
+   the form elements. Uses glassmorphism effect.
+   -------------------------------------------- */
 .auth-card {
   width: 100%;
   padding: 1.5rem 1rem;
   color: white;
   border: none;
-  background: transparent;
+  background: transparent;    /* See-through background */
   box-shadow: none;
-  backdrop-filter: none;
+  backdrop-filter: none;      /* No blur effect */
 }
 
+/* --------------------------------------------
+   HEADER TEXT STYLES
+   --------------------------------------------
+   Styles for the title and subtitle at the
+   top of the auth form.
+   -------------------------------------------- */
+
+/* Main heading ("Welcome Back" or "Join Our Adventure") */
 .auth-header h2 {
-  font-family: 'Playfair Display', serif;
+  font-family: 'Playfair Display', serif;  /* Elegant serif font */
   font-size: 2.8rem;
   margin-bottom: 0.5rem;
   font-weight: 700;
   color: #fff;
 }
 
+/* Subtitle text */
 .auth-header p {
   opacity: 0.9;
   margin-bottom: 2rem;
   font-size: 1.1rem;
-  color: #a8d5ba;
+  color: #a8d5ba;         /* Light green color */
 }
 
+/* --------------------------------------------
+   FORM LAYOUT
+   --------------------------------------------
+   Styles for the form structure and name row
+   (first name + last name side by side).
+   -------------------------------------------- */
+
+/* Main form container - uses CSS Grid for layout */
 .auth-form {
   display: grid;
-  gap: 1.5rem;
+  gap: 1.5rem;            /* Space between form fields */
 }
 
+/* Container for first and last name fields */
 .auth-name-row {
   display: flex;
   gap: 1rem;
   width: 100%;
 }
 
+/* Each name field takes equal space */
 .auth-name-row .input-field {
   flex: 1;
 }
 
+/* --------------------------------------------
+   INPUT FIELD STYLES
+   --------------------------------------------
+   Styles for form labels and text inputs.
+   Uses glassmorphism effect with semi-transparent
+   backgrounds and white borders.
+   -------------------------------------------- */
+
+/* Container for label + input pair */
 .input-field {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
 
+/* Label text styling */
 .input-field label {
   font-family: 'Playfair Display', serif;
   font-size: 0.9rem;
@@ -103,42 +175,56 @@
   margin-bottom: 0.5rem;
 }
 
+/* Text input fields */
 .input-field input {
   padding: 1.15rem;
   border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.4);    /* Semi-transparent white border */
+  background: rgba(255, 255, 255, 0.05);          /* Very subtle white background */
   color: white;
   font-size: 1.15rem;
-  transition: all 0.3s ease;
+  transition: all 0.3s ease;                    /* Smooth focus transition */
   width: 100%;
 }
 
+/* Input field when focused (clicked/typing) */
 .input-field input:focus {
-  outline: none;
-  background: rgba(255, 255, 255, 0.1);
-  border-color: #fff;
+  outline: none;                                /* Remove default outline */
+  background: rgba(255, 255, 255, 0.1);         /* Slightly brighter background */
+  border-color: #fff;                             /* Solid white border */
 }
 
+/* Placeholder text styling */
 .input-field input::placeholder {
-  color: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.15);             /* Very faint white */
 }
 
+/* --------------------------------------------
+   ERROR MESSAGE
+   --------------------------------------------
+   Red alert box shown when authentication fails.
+   -------------------------------------------- */
 .auth-error-msg {
-  color: #ff6b6b;
+  color: #ff6b6b;                                   /* Red text */
   font-size: 0.75rem;
   text-align: center;
-  background: rgba(255, 107, 107, 0.1);
+  background: rgba(255, 107, 107, 0.1);           /* Light red background */
   padding: 0.4rem;
   border-radius: 6px;
-  border: 1px solid rgba(255, 107, 107, 0.2);
+  border: 1px solid rgba(255, 107, 107, 0.2);       /* Red border */
 }
 
+/* --------------------------------------------
+   PRIMARY BUTTON (Sign In / Sign Up)
+   --------------------------------------------
+   The main coral/orange button for submitting
+   the authentication form.
+   -------------------------------------------- */
 .auth-primary-btn {
   padding: 1.25rem;
   border-radius: 16px;
   border: none;
-  background: #ff6b35; /* Solid Coral */
+  background: #ff6b35;                            /* Coral/orange color */
   color: white;
   font-weight: 700;
   font-size: 1.2rem;
@@ -147,12 +233,19 @@
   margin-top: 0.5rem;
 }
 
+/* Button hover effect - only when not disabled */
 .auth-primary-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  filter: brightness(1.1);
-  box-shadow: 0 10px 30px rgba(255, 107, 53, 0.3);
+  transform: translateY(-2px);                      /* Slight lift effect */
+  filter: brightness(1.1);                          /* Slightly brighter */
+  box-shadow: 0 10px 30px rgba(255, 107, 53, 0.3); /* Orange glow shadow */
 }
 
+/* --------------------------------------------
+   DIVIDER LINE ("OR" separator)
+   --------------------------------------------
+   Horizontal line with "OR" text in the middle,
+   used to separate different sign-in options.
+   -------------------------------------------- */
 .auth-divider {
   display: flex;
   align-items: center;
@@ -163,6 +256,7 @@
   font-weight: 800;
 }
 
+/* The horizontal lines on each side of "OR" */
 .auth-divider::before,
 .auth-divider::after {
   content: '';
@@ -171,13 +265,19 @@
   background: rgba(255, 255, 255, 0.15);
 }
 
+/* --------------------------------------------
+   GOOGLE SIGN-IN BUTTON
+   --------------------------------------------
+   White button for Google authentication.
+   Currently not used but styled for future use.
+   -------------------------------------------- */
 .auth-google-btn {
   height: 54px;
   padding: 0 1.5rem;
   border-radius: 12px;
   border: none;
   background: white;
-  color: #1e293b;
+  color: #1e293b;                                     /* Dark text for contrast */
   font-weight: 700;
   font-size: 1.05rem;
   cursor: pointer;
@@ -191,33 +291,45 @@
   line-height: 1;
 }
 
+/* Google icon styling */
 .google-svg-icon {
   width: 22px;
   height: 22px;
   display: block;
   flex-shrink: 0;
-  transform: translateY(-0.5px); /* Tiny optical nudge to center with caps */
+  transform: translateY(-0.5px);  /* Visual centering adjustment */
 }
 
+/* Google button hover effect */
 .auth-google-btn:hover {
   transform: translateY(-2px);
   background: #fdfdfd;
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
 }
 
+/* --------------------------------------------
+   FOOTER SECTION
+   --------------------------------------------
+   Contains the text and link to toggle between
+   sign in and sign up modes.
+   -------------------------------------------- */
+
+/* Footer container */
 .auth-footer {
   margin-top: 2rem;
 }
 
+/* Footer text color */
 .auth-footer p {
   color: rgba(255, 255, 255, 0.6);
   font-size: 1.05rem;
 }
 
+/* Link to toggle between signin/signup */
 .auth-toggle-link {
   background: none;
   border: none;
-  color: #a8d5ba;
+  color: #a8d5ba;           /* Light green */
   font-weight: 700;
   cursor: pointer;
   margin-left: 8px;
@@ -225,13 +337,22 @@
   font-size: 1.05rem;
 }
 
+/* ============================================
+   RESPONSIVE STYLES - Mobile Adjustments
+   ============================================ */
+
+/* --------------------------------------------
+   SMALL SCREENS (up to 480px wide)
+   - Phones in portrait mode
+   -------------------------------------------- */
 @media (max-width: 480px) {
   .auth-main {
-    padding: 20px 0; /* Let flex centering do the work */
+    padding: 20px 0; 
     align-items: center;
     overflow: hidden;
   }
   
+  /* Adjust card for mobile - transparent, no borders */
   .auth-card {
     padding: 1rem 2rem;
     border-radius: 0;
@@ -243,27 +364,32 @@
     flex-direction: column;
     justify-content: center;
     height: auto;
-    max-height: calc(100dvh - 80px); /* Leave room for Navbar */
+    max-height: calc(100dvh - 80px);  /* Leave room for Navbar */
   }
 
+  /* Smaller heading on mobile */
   .auth-header h2 {
     font-size: 1.6rem;
   }
 
+  /* Hide subtitle on very small screens to save space */
   .auth-header p {
     margin-bottom: 1rem;
-    display: none; /* Hide subtext on small screens if it's too tight */
+    display: none;
   }
   
+  /* Compact name fields */
   .auth-name-row {
-    grid-template-columns: 1fr 1fr; /* Keep it compact */
+    grid-template-columns: 1fr 1fr;
     gap: 0.5rem;
   }
 
+  /* Smaller input padding on mobile */
   .input-field input {
     padding: 0.7rem;
   }
 
+  /* Less footer margin on mobile */
   .auth-footer {
     margin-top: 1rem;
   }
@@ -273,17 +399,24 @@
   }
 }
 
-/* Height-based aggressive scaling for Sign-up mode */
+/* --------------------------------------------
+   SHORT SCREENS - Height-based adjustments
+   - For landscape phones or devices with
+     limited vertical space
+   -------------------------------------------- */
+
+/* Screens 700px tall or less */
 @media (max-height: 700px) {
     .auth-header h2 { font-size: 1.5rem; }
-    .auth-form { gap: 0.6rem; }
-    .input-field input { padding: 0.6rem; }
-    .auth-google-btn, .auth-primary-btn { padding: 0.7rem; }
+    .auth-form { gap: 0.6rem; }              /* Less space between fields */
+    .input-field input { padding: 0.6rem; } /* Smaller inputs */
+    .auth-google-btn, .auth-primary-btn { padding: 0.7rem; } /* Smaller buttons */
 }
 
+/* Screens 600px tall or less - very compact */
 @media (max-height: 600px) {
-    .auth-header { display: none; }
+    .auth-header { display: none; }          /* Hide header to save space */
     .auth-footer { margin-top: 0.5rem; }
-    .auth-divider { display: none; }
-    .auth-google-btn { display: none; }
+    .auth-divider { display: none; }         /* Hide divider */
+    .auth-google-btn { display: none; }     /* Hide Google button */
 }

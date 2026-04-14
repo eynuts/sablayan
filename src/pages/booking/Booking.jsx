@@ -1,3 +1,8 @@
+// Booking page imports and helper utilities.
+// This page supports both room reservations and zipline activity bookings.
+// It reads room and pricing data from Firebase, validates user input,
+// calculates discounts and deposit amounts, and forwards booking info
+// to the payment page.
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { onValue, ref } from 'firebase/database'
@@ -11,6 +16,8 @@ import { preloadImage } from '../../utils/pageLoad'
 import { CHECK_IN_TIME, CHECK_OUT_TIME, formatPolicyTime } from '../../utils/bookingPolicy'
 import './Booking.css'
 
+// clampNumber ensures we never exceed min/max bounds when the guest counts
+// are updated via inputs or buttons.
 const clampNumber = (value, min, max) => Math.min(Math.max(Number(value) || 0, min), max)
 
 const calculateNights = (checkIn, checkOut) => {
@@ -60,6 +67,9 @@ const calculateZiplinePricing = ({
   }
 }
 
+// Main booking page component.
+// Uses URL query params to select room or zipline mode, loads live pricing
+// settings from Firebase, and builds the booking form.
 const Booking = () => {
   const { user } = useAuth()
   const [searchParams] = useSearchParams()
@@ -93,6 +103,9 @@ const Booking = () => {
   const [ziplineType, setZiplineType] = useState('tourist')
   const [showActivitySelector, setShowActivitySelector] = useState(false)
   const [pageReady, setPageReady] = useState(false)
+  // booking form data holds both room booking fields and zipline booking fields.
+  // Fields that are not used by the active booking type remain available
+  // so switching between room and zipline does not lose user input.
   const [formData, setFormData] = useState({
     name: user?.displayName || '',
     email: user?.email || '',
@@ -106,6 +119,8 @@ const Booking = () => {
     message: ''
   })
 
+  // Sync user profile values into the form when the signed-in user changes.
+  // This keeps the booking form pre-filled with the authenticated user's name/email.
   useEffect(() => {
     setFormData((prev) => ({
       ...prev,
@@ -114,6 +129,8 @@ const Booking = () => {
     }))
   }, [user])
 
+  // Determine initial booking mode from query parameters.
+  // ?room=ROOM_ID means room booking, otherwise type=room or type=zipline can set the mode.
   useEffect(() => {
     if (roomParam) {
       setBookingType('room')
@@ -131,6 +148,8 @@ const Booking = () => {
     }
   }, [roomParam, typeParam])
 
+  // Load zipline pricing configuration from Firebase.
+  // The data source supplies local/tourist rates and the daily capacity limit.
   useEffect(() => {
     const ziplineRef = ref(db, 'zipline')
     const unsubscribe = onValue(
@@ -153,6 +172,8 @@ const Booking = () => {
     return () => unsubscribe()
   }, [])
 
+  // Load discount percentages from general settings.
+  // These values are used to calculate senior and child discounts for zipline bookings.
   useEffect(() => {
     const settingsRef = ref(db, 'settings/general')
     const unsubscribe = onValue(
@@ -180,6 +201,8 @@ const Booking = () => {
     return () => unsubscribe()
   }, [])
 
+  // Load room inventory from Firebase and normalize the response.
+  // Each room is mapped to a consistent shape with title, price, capacity, image, and features.
   useEffect(() => {
     const roomsRef = ref(db, 'rooms')
 
@@ -222,10 +245,16 @@ const Booking = () => {
     return () => unsubscribe()
   }, [])
 
+  // Determine the currently selected room or zipline price.
   const currentRoom = rooms.find((room) => room.id === currentRoomId) || null
-  const currentPrice = bookingType === 'room' ? (currentRoom?.price || 0) : (ziplineType === 'local' ? ziplineSettings.localPrice : ziplineSettings.touristPrice)
+  const currentPrice = bookingType === 'room'
+    ? (currentRoom?.price || 0)
+    : (ziplineType === 'local' ? ziplineSettings.localPrice : ziplineSettings.touristPrice)
+
+  // Calculate number of nights for room bookings only.
   const nights = useMemo(() => calculateNights(formData.checkIn, formData.checkOut), [formData.checkIn, formData.checkOut])
 
+  // Calculate zipline pricing based on guest counts and discount rates.
   const ziplinePricing = useMemo(() => (
     calculateZiplinePricing({
       pricePerPerson: currentPrice,
@@ -244,6 +273,8 @@ const Booking = () => {
     discountSettings.seniorDiscountPercent
   ])
 
+  // Once room data is loaded, verify the selected room ID and
+  // preload the room image before showing the page content.
   useEffect(() => {
     if (roomsLoading) {
       return
@@ -277,6 +308,9 @@ const Booking = () => {
     }
   }, [currentRoom, currentRoomId, roomsLoading])
 
+  // Handle controlled form input changes.
+  // This keeps formData in sync with the user's input and also ensures
+  // guest totals remain consistent when sub-counts are changed.
   const handleChange = (e) => {
     const { name, value } = e.target
     setFormData((prev) => {
@@ -321,10 +355,14 @@ const Booking = () => {
     })
   }
 
+  // Open the modal that lets the user choose a room or zipline option.
   const handleRoomSelect = () => {
     setShowActivitySelector(true)
   }
 
+  // Handle selection of a room or zipline activity.
+  // If a room is picked, switch to room booking mode and store the room ID.
+  // If a zipline rate is picked, switch to zipline mode and set the type.
   const handleActivityChoice = (item) => {
     if (item.type === 'room') {
       setBookingType('room')
@@ -336,6 +374,9 @@ const Booking = () => {
     setShowActivitySelector(false)
   }
 
+  // Final booking submission handler.
+  // Validates required fields based on the current booking type,
+  // then navigates to /payment with prepared booking information.
   const handleSubmit = (e) => {
     e.preventDefault()
 
@@ -415,6 +456,8 @@ const Booking = () => {
     }
   }
 
+  // Update guest counts with +/- buttons while preserving valid totals.
+  // Senior and child counts always stay within the current total guest limit.
   const updateGuestCount = (field, delta) => {
     setFormData((prev) => {
       if (field === 'guests') {

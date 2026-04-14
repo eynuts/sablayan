@@ -6,6 +6,7 @@ import Navbar from '../../components/Navbar'
 import PageLoader from '../../components/PageLoader'
 import './Accommodations.css'
 
+// Timeout used to fail gracefully if room data takes too long to load
 const ROOM_LOAD_TIMEOUT_MS = 12000
 
 const Accommodations = () => {
@@ -14,6 +15,7 @@ const Accommodations = () => {
   const [loadError, setLoadError] = useState('')
   const [selectedRoom, setSelectedRoom] = useState(null)
 
+  // Fetch room data from Firebase and map it into view-friendly room objects
   useEffect(() => {
     let active = true
     const loadRooms = async () => {
@@ -78,11 +80,13 @@ const Accommodations = () => {
 
   return (
     <div className="accommodations-page">
+      {/* Show a loading overlay while room data is being fetched */}
       {loading && (
         <PageLoader text="Preparing your island getaway..." />
       )}
       <Navbar />
 
+      {/* Hero banner for the accommodations page */}
       <section className="rooms-hero">
         <div className="rooms-hero-overlay"></div>
         <div className="rooms-hero-content">
@@ -92,6 +96,7 @@ const Accommodations = () => {
         </div>
       </section>
 
+      {/* Main rooms listing section */}
       <section className="rooms-section">
         <div className="section-container">
           {!loading && (
@@ -126,6 +131,8 @@ const Accommodations = () => {
         </div>
       </section>
 
+      {/* Modal detail view for the selected room */}
+      {/* Modal detail view for the selected room */}
       {selectedRoom && (
         <div className="room-modal-overlay" onClick={() => setSelectedRoom(null)}>
           <div className="room-modal" onClick={(e) => e.stopPropagation()}>
@@ -209,6 +216,7 @@ const Accommodations = () => {
         </div>
       </section>
 
+      {/* Simple page footer with copyright */}
       <footer className="footer">
         <div className="footer-content">
           <p>&copy; {new Date().getFullYear()} Sablayan Adventure Camp. All rights reserved.</p>

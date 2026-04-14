@@ -1,3 +1,5 @@
+// Zipline activity admin settings page.
+// Manages pricing, daily limits, and zipline metadata stored in Firebase.
 import { useEffect, useState } from 'react'
 import { onValue, ref, set } from 'firebase/database'
 import { db } from '../../firebase'

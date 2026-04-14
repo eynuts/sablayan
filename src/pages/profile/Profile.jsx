@@ -1,3 +1,6 @@
+// Profile page imports.
+// The profile page displays account details, avatar upload, booking summaries,
+// and reservation history for the signed-in guest.
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { onValue, ref } from 'firebase/database'
@@ -10,6 +13,7 @@ import { uploadToCloudinaryUnsigned } from '../../utils/cloudinary'
 import { formatCurrency, formatDate, getBookingOperationalStatus, getPaymentStatusMeta, normalizeBookings } from '../admin/adminData'
 import './Profile.css'
 
+// Maps the booking operational phase to a user-facing message.
 const getStayMessage = (phase) => {
   if (phase === 'active') {
     return 'Your reservation is currently in effect.'
@@ -30,6 +34,7 @@ const getStayMessage = (phase) => {
   return 'Reservation schedule is still being prepared.'
 }
 
+// Determines the approval label and styling tone based on booking status.
 const getApprovalStatus = (booking) => {
   const paymentStatus = (booking?.paymentStatus || '').trim().toLowerCase()
   const bookingStatus = (booking?.bookingStatus || '').trim().toLowerCase()
@@ -54,6 +59,8 @@ const getApprovalStatus = (booking) => {
   }
 }
 
+// Main profile component.
+// It loads user account details, guest bookings, and renders profile management UI.
 const Profile = () => {
   const { user } = useAuth()
   const [bookings, setBookings] = useState([])
@@ -65,6 +72,8 @@ const Profile = () => {
   const [isSaving, setIsSaving] = useState(false)
   const [saveMessage, setSaveMessage] = useState('')
 
+  // Initialize profile form fields from the authenticated user's display name and photo.
+  // This keeps the profile editor in sync with Firebase auth profile values.
   useEffect(() => {
     const parts = (user?.displayName || '').trim().split(/\s+/).filter(Boolean)
     setFirstName(parts[0] || '')
@@ -72,6 +81,8 @@ const Profile = () => {
     setAvatarPreview(user?.photoURL || '')
   }, [user])
 
+  // Subscribe to bookings data from Firebase and normalize the result.
+  // Also sync expired pending bookings in the background each time bookings refresh.
   useEffect(() => {
     const bookingsRef = ref(db, 'bookings')
 
@@ -95,6 +106,8 @@ const Profile = () => {
     return () => unsubscribe()
   }, [])
 
+  // Filter all bookings to the current guest by email or user ID.
+  // This memoized list is used to display only reservations belonging to the signed-in account.
   const guestBookings = useMemo(() => {
     const email = user?.email?.trim().toLowerCase()
     const userId = user?.uid || ''
@@ -116,6 +129,7 @@ const Profile = () => {
       })
   }, [bookings, user])
 
+  // Compute profile statistics for summary tiles shown in the profile overview.
   const stats = useMemo(() => ({
     total: guestBookings.length,
     active: guestBookings.filter((booking) => getBookingOperationalStatus(booking).phase === 'active').length,
@@ -125,6 +139,7 @@ const Profile = () => {
 
   const avatarLetter = (firstName || user?.displayName || user?.email || 'G').charAt(0).toUpperCase()
 
+  // Handle selecting a new avatar image and show an immediate preview.
   const handleAvatarChange = (event) => {
     const file = event.target.files?.[0] || null
     setAvatarFile(file)
@@ -138,6 +153,8 @@ const Profile = () => {
     setAvatarPreview(URL.createObjectURL(file))
   }
 
+  // Save profile edits to Firebase, including optional avatar upload.
+  // If an avatar file is selected, it is uploaded to Cloudinary first.
   const handleProfileSave = async (event) => {
     event.preventDefault()
     setSaveMessage('')

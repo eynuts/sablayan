@@ -1,3 +1,5 @@
+// Admin dashboard home page.
+// Shows high-level booking, room, user, and revenue summaries for quick oversight.
 import { useEffect, useMemo, useState } from 'react'
 import { onValue, ref } from 'firebase/database'
 import { db, syncExpiredPendingBookings } from '../../firebase'
@@ -53,6 +55,7 @@ const AdminHome = () => {
     }
   }, [])
 
+  // Derive aggregated data for dashboard cards and charts.
   const users = useMemo(() => normalizeUsers(usersData, bookings), [usersData, bookings])
   const occupancy = useMemo(() => getOccupancyStats(rooms, bookings), [rooms, bookings])
   const recentActivity = useMemo(() => getRecentActivity(bookings, users), [bookings, users])

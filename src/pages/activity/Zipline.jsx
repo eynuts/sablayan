@@ -25,11 +25,12 @@ const Zipline = () => {
     dailyLimit: 20
   })
 
-  // Scroll to top on mount
+  // Ensure the page starts at the top when this component mounts.
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [])
 
+  // Subscribe to zipline settings from Firebase so the page shows current prices.
   useEffect(() => {
     const settingsRef = ref(db, 'zipline')
     const unsubscribe = onValue(
@@ -52,6 +53,7 @@ const Zipline = () => {
     return () => unsubscribe()
   }, [])
 
+  // Preload hero and gallery images before showing the page content.
   useEffect(() => {
     let active = true
 
@@ -129,11 +131,18 @@ const Zipline = () => {
         <div className="section-container">
           <div className="zv3-hero-content">
             <span className="zv3-badge">Adventure Awaits</span>
-            <h1>Island-to-Island <br/><span>Zipline</span></h1>
+            <h1>
+              Island-to-Island <br />
+              <span>Zipline</span>
+            </h1>
             <p>Soar above the turquoise waters of Sablayan on one of the longest over-water ziplines in Asia.</p>
             <div className="zv3-hero-btns">
-              <Link to="/booking" className="zv3-btn-primary">Book Now</Link>
-              <a href="#rates" className="zv3-btn-secondary">View Rates</a>
+              <Link to="/booking" className="zv3-btn-primary">
+                Book Now
+              </Link>
+              <a href="#rates" className="zv3-btn-secondary">
+                View Rates
+              </a>
             </div>
           </div>
         </div>
@@ -162,11 +171,11 @@ const Zipline = () => {
           <div className="zv3-exp-grid">
             <div className="zv3-exp-text">
               <span className="zv3-tag">The Experience</span>
-              <h2>A Journey Between <br/>Two Worlds</h2>
+              <h2>A Journey Between <br />Two Worlds</h2>
               <p className="zv3-lead">Disconnected from the ground, connected to the horizon.</p>
               <p>
-                Our 1.7km island-to-island zipline offers more than just an adrenaline rush. 
-                It's a unique perspective of the Sablayan coastline, where you'll glide 
+                Our 1.7km island-to-island zipline offers more than just an adrenaline rush.
+                It's a unique perspective of the Sablayan coastline, where you'll glide
                 effortlessly over pristine coral reefs and deep blue waters.
               </p>
               <div className="zv3-exp-features">
@@ -205,7 +214,7 @@ const Zipline = () => {
         <div className="section-container">
           <div className="zv3-section-header">
             <span className="zv3-tag">Pricing</span>
-            <h2>Fair Rates for <br/>Every Adventurer</h2>
+            <h2>Fair Rates for <br />Every Adventurer</h2>
           </div>
           <div className="zv3-rates-grid">
             {pricing.map((item, i) => (
@@ -220,15 +229,22 @@ const Zipline = () => {
                   <span className="amt">{item.price}</span>
                 </div>
                 <ul className="zv3-rate-features">
-                  {item.features.map((f, j) => (
-                    <li key={j}><i className="fas fa-check"></i> {f}</li>
+                  {item.features.map((feature) => (
+                    <li key={feature}>
+                      <i className="fas fa-check-circle"></i>
+                      {feature}
+                    </li>
                   ))}
                 </ul>
-                <Link to="/booking" className="zv3-rate-btn">Book Flight</Link>
+                <a href="/booking" className="zv3-rate-btn">
+                  Book Now
+                </a>
               </div>
             ))}
           </div>
-          <p className="zv3-rates-notice">* Rates are subject to change without prior notice.</p>
+          <div className="zv3-rates-notice">
+            All pricing is based on current rates and is subject to change.
+          </div>
         </div>
       </section>
 
@@ -236,48 +252,48 @@ const Zipline = () => {
       <section className="zv3-highlights">
         <div className="section-container">
           <div className="zv3-highlights-grid">
-            {highlights.map((h, i) => (
-              <div key={i} className="zv3-h-card">
+            {highlights.map((item) => (
+              <div key={item.title} className="zv3-h-card">
                 <div className="zv3-h-icon">
-                  <i className={h.icon}></i>
+                  <i className={item.icon}></i>
                 </div>
-                <h3>{h.title}</h3>
-                <p>{h.text}</p>
+                <h3>{item.title}</h3>
+                <p>{item.text}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* 6. GALLERY PREVIEW */}
+      {/* 6. GALLERY SECTION */}
       <section className="zv3-gallery">
         <div className="section-container">
           <div className="zv3-gallery-grid">
-            <div className="zv3-gallery-item tall">
-              <img src={ziplineMain} alt="Gallery 1" />
+            <div className="zv3-gallery-item">
+              <img src={ziplineImg1} alt="Zipline gallery image" />
             </div>
             <div className="zv3-gallery-item">
-              <img src={ziplineImg3} alt="Gallery 2" />
+              <img src={ziplineImg2} alt="Zipline gallery image" />
             </div>
             <div className="zv3-gallery-item">
-              <img src={ziplineHeroImg} alt="Gallery 3" />
+              <img src={ziplineImg3} alt="Zipline gallery image" />
             </div>
           </div>
         </div>
       </section>
 
-      {/* 7. FINAL CTA */}
+      {/* 7. CTA SECTION */}
       <section className="zv3-cta">
         <div className="zv3-cta-bg">
-          <img src={ziplineImg3} alt="CTA Background" />
-          <div className="zv3-cta-overlay"></div>
+          <img src={ziplineMain} alt="Zipline background" />
         </div>
-        <div className="section-container">
-          <div className="zv3-cta-content">
-            <h2>Ready to Take the Leap?</h2>
-            <p>Secure your spot for an unforgettable island-to-island experience.</p>
-            <Link to="/booking" className="zv3-btn-primary large">Reserve Your Flight Now</Link>
-          </div>
+        <div className="zv3-cta-overlay"></div>
+        <div className="zv3-cta-content">
+          <h2>Ready for an unforgettable ride?</h2>
+          <p>Book your zipline adventure now and experience Sablayan from a breathtaking new angle.</p>
+          <Link to="/booking" className="zv3-btn-primary large">
+            Reserve Your Slot
+          </Link>
         </div>
       </section>
 

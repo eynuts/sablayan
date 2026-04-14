@@ -1,4 +1,4 @@
-/* Navigation Styles - Sidell Beach Resort */
+/* Navbar styles for the main site header and desktop navigation */
 
 .navbar {
   position: fixed; /* Changed from absolute for consistent behavior */
@@ -133,6 +133,7 @@
   width: 20px;
 }
 
+/* Right-side action buttons and user menu trigger */
 .navbar-actions {
   display: flex;
   align-items: center;
@@ -576,7 +577,7 @@
   box-shadow: 0 6px 20px rgba(0, 119, 182, 0.4);
 }
 
-/* Hamburger */
+/* Mobile hamburger button and menu toggle */
 .hamburger {
   display: none;
   flex-direction: column;
@@ -898,6 +899,7 @@
 }
 
 /* Responsive adjustments */
+/* Responsive adjustments for tablet and smaller screens */
 @media (max-width: 768px) {
   .navbar {
     padding: 1rem 0;

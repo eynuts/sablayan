@@ -1,3 +1,6 @@
+// Home page imports.
+// This page displays the landing experience with hero imagery, featured experiences,
+// key stats, amenities, guest testimonials, and call-to-action navigation.
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../../components/Navbar'
@@ -11,9 +14,12 @@ import { preloadImages } from '../../utils/pageLoad'
 import './Home.css'
 
 const Home = () => {
+  // pageReady controls whether the hero/sections are displayed or if the loader shows.
   const [pageReady, setPageReady] = useState(false)
   const navigate = useNavigate()
 
+  // Preload critical images for the hero and featured cards.
+  // This ensures the page renders smoothly once assets are ready.
   useEffect(() => {
     let active = true
 
@@ -35,6 +41,8 @@ const Home = () => {
     }
   }, [])
 
+  // The experiences array defines the three main featured cards shown below.
+  // Each object contains display labels, image assets, navigation targets, and visual theme classes.
   const experiences = [
     {
       id: 3,

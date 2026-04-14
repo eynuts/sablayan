@@ -1,3 +1,7 @@
+// Payment page imports.
+// This page receives booking details from the prior booking flow,
+// displays QR payment instructions, and submits the receipt with
+// the user's GCash reference number to Firebase.
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { ref, push, set } from 'firebase/database'
@@ -10,7 +14,7 @@ import { preloadImage } from '../../utils/pageLoad'
 import { CHECK_IN_TIME, CHECK_OUT_TIME, formatPolicyTime } from '../../utils/bookingPolicy'
 import './Payment.css'
 
-// QR Code image import
+// QR Code image for the GCash scan card section.
 import qrImage from '../../assets/images/qr.png'
 
 const Payment = () => {
@@ -27,6 +31,7 @@ const Payment = () => {
   const [showApprovalModal, setShowApprovalModal] = useState(false)
   const [pageReady, setPageReady] = useState(false)
 
+  // Preload the QR image so the payment screen is ready before display.
   useEffect(() => {
     let active = true
 
@@ -41,6 +46,9 @@ const Payment = () => {
     }
   }, [])
 
+  // Submit the payment form.
+  // Uploads the receipt to Cloudinary, builds the booking payload,
+  // and stores the booking record in Firebase with pending approval.
   const handleSubmit = async (e) => {
     e.preventDefault()
     
@@ -91,6 +99,32 @@ const Payment = () => {
       const bookingRef = push(bookingsRef)
       await set(bookingRef, bookingPayload)
 
+      // Send booking confirmation email
+      try {
+        const emailResponse = await fetch('https://sablayan-backend.onrender.com/emailjs/booking-confirmation', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            name: bookingData.name,
+            email: user.email,
+            booking_type: bookingData.type === 'room' ? 'Room' : 'Zipline',
+            date: bookingData.type === 'room' ? bookingData.checkIn : bookingData.date,
+            guests: bookingData.guests.toString()
+          })
+        })
+
+        const emailResult = await emailResponse.json()
+        if (emailResult.success) {
+          console.log('✓ Confirmation email sent successfully')
+        } else {
+          console.warn('Email sending failed, but booking was created:', emailResult.error)
+        }
+      } catch (emailError) {
+        console.warn('Email service error (booking still created):', emailError)
+      }
+
       setShowApprovalModal(true)
       
     } catch (error) {
@@ -101,6 +135,7 @@ const Payment = () => {
     }
   }
 
+  // Update receipt file state and create a temporary preview URL.
   const handleReceiptChange = (e) => {
     const file = e.target.files?.[0] || null
     setReceiptFile(file)
@@ -111,6 +146,8 @@ const Payment = () => {
     }
   }
 
+  // If the page is loaded without booking details, show an error and
+  // route the user back to the booking page.
   if (!bookingData) {
     return (
       <div id="payment-page-root">
@@ -126,6 +163,7 @@ const Payment = () => {
     )
   }
 
+  // Guard against a mismatch between the booking owner and the signed-in user.
   if (bookingData.email && user?.email && bookingData.email !== user.email) {
     return (
       <div id="payment-page-root">

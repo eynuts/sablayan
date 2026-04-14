@@ -1,3 +1,4 @@
+/* Motion variants used by activity page sections and cards. */
 export const createRevealVariants = (reducedMotion = false, delay = 0) => ({
   hidden: {
     opacity: 0,
@@ -14,6 +15,7 @@ export const createRevealVariants = (reducedMotion = false, delay = 0) => ({
   }
 })
 
+/* Container variant that staggers child reveals when motion is enabled. */
 export const createStaggerContainer = (reducedMotion = false, staggerChildren = 0.12, delayChildren = 0) => ({
   hidden: {},
   visible: {
@@ -24,7 +26,8 @@ export const createStaggerContainer = (reducedMotion = false, staggerChildren = 
   }
 })
 
-export const cardHoverMotion = (reducedMotion = false) => (
+/* Hover motion for activity cards, disabled when reduced motion is preferred. */
+export const cardHoverMotion = (reducedMotion = false) =>
   reducedMotion
     ? {}
     : {
@@ -34,4 +37,3 @@ export const cardHoverMotion = (reducedMotion = false) => (
           ease: [0.22, 1, 0.36, 1]
         }
       }
-)

@@ -1,3 +1,5 @@
+// Admin dashboard shell component.
+// Handles admin login gating, sidebar navigation, and tabbed page routing.
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAdminAuth } from '../../AdminAuthContext'
@@ -38,6 +40,7 @@ const AdminDashboard = () => {
 
   const adminAvatarLetter = getFirstName(user?.displayName, user?.email).charAt(0).toUpperCase()
 
+  // Switch active admin section and collapse mobile sidebar.
   const handleTabClick = (tab) => {
     setActiveTab(tab)
     window.scrollTo(0, 0)
@@ -46,6 +49,7 @@ const AdminDashboard = () => {
     }
   }
 
+  // Sign in the admin user using email/password from the admin auth context.
   const handleAdminLogin = async (event) => {
     event.preventDefault()
     setLoginError('')

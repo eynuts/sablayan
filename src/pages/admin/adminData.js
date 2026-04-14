@@ -1,3 +1,5 @@
+// Shared helpers for admin dashboard pages.
+// Includes formatting, normalizing Firebase data, status helpers, and analytics utilities.
 import {
   getReservationPhase,
   getReservationWindow,

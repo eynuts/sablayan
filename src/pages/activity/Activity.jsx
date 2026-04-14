@@ -19,11 +19,16 @@ import './Activity.css'
 const Activity = () => {
   const location = useLocation()
   const reducedMotion = useReducedMotion()
+
+  // Loading state for the page hero images and background video.
   const [imagesReady, setImagesReady] = useState(false)
   const [videoReady, setVideoReady] = useState(false)
+
+  // Track the active section on the page for the sticky navigation.
   const [activeSection, setActiveSection] = useState('zipline')
   const [showStickyNav, setShowStickyNav] = useState(false)
 
+  // Preload the hero activity images before showing the page content.
   useEffect(() => {
     let active = true
 
@@ -38,55 +43,71 @@ const Activity = () => {
     }
   }, [])
 
-  const activities = useMemo(() => ([
-    {
-      id: 'zipline',
-      title: 'Island-to-Island Zipline',
-      subtitle: 'Asia\'s Longest Over-water Zipline',
-      shortDesc: 'Fly 1.7km over crystal clear waters connecting two islands with a guided, high-impact experience that balances adrenaline and scenery.',
-      image: ziplineImg,
-      link: '/activity/zipline',
-      theme: 'zipline',
-      duration: '15-20 mins',
-      age: '8+ years',
-      badge: 'High Thrill',
-      highlights: ['1.7km Length', 'Island to Island', 'Over-water']
-    },
-    {
-      id: 'diving',
-      title: 'Apo Reef Diving',
-      subtitle: 'World-Class Marine Sanctuary',
-      shortDesc: 'Explore a calmer, immersive side of Sablayan with reef discovery, marine life encounters, and one of the country\'s most memorable dive settings.',
-      image: divingImg,
-      link: '/activity/diving',
-      theme: 'diving',
-      duration: '3-4 hours',
-      age: '10+ years',
-      badge: 'Signature Nature',
-      highlights: ['Marine Sanctuary', 'Crystal Clear Water', 'Diverse Species']
-    }
-  ]), [])
+  // Data for the activity cards shown in the hub page.
+  const activities = useMemo(
+    () => [
+      {
+        id: 'zipline',
+        title: 'Island-to-Island Zipline',
+        subtitle: 'Asia\'s Longest Over-water Zipline',
+        shortDesc:
+          'Fly 1.7km over crystal clear waters connecting two islands with a guided, high-impact experience that balances adrenaline and scenery.',
+        image: ziplineImg,
+        link: '/activity/zipline',
+        theme: 'zipline',
+        duration: '15-20 mins',
+        age: '8+ years',
+        badge: 'High Thrill',
+        highlights: ['1.7km Length', 'Island to Island', 'Over-water']
+      },
+      {
+        id: 'diving',
+        title: 'Apo Reef Diving',
+        subtitle: 'World-Class Marine Sanctuary',
+        shortDesc:
+          'Explore a calmer, immersive side of Sablayan with reef discovery, marine life encounters, and one of the country\'s most memorable dive settings.',
+        image: divingImg,
+        link: '/activity/diving',
+        theme: 'diving',
+        duration: '3-4 hours',
+        age: '10+ years',
+        badge: 'Signature Nature',
+        highlights: ['Marine Sanctuary', 'Crystal Clear Water', 'Diverse Species']
+      }
+    ],
+    []
+  )
 
-  const heroFacts = useMemo(() => ([
-    { label: 'Signature experiences', value: '2 curated' },
-    { label: 'Best for groups & couples', value: 'All-day ready' },
-    { label: 'From quick thrills to deep dives', value: '15 mins - 4 hrs' }
-  ]), [])
+  const heroFacts = useMemo(
+    () => [
+      { label: 'Signature experiences', value: '2 curated' },
+      { label: 'Best for groups & couples', value: 'All-day ready' },
+      { label: 'From quick thrills to deep dives', value: '15 mins - 4 hrs' }
+    ],
+    []
+  )
 
-  const stats = useMemo(() => ([
-    { number: '1.7km', label: 'Zipline Length', icon: 'fa-wind' },
-    { number: '100+', label: 'Dive Spots Nearby', icon: 'fa-water' },
-    { number: '15+', label: 'Years Experience', icon: 'fa-award' },
-    { number: '10k+', label: 'Happy Guests', icon: 'fa-smile' }
-  ]), [])
+  const stats = useMemo(
+    () => [
+      { number: '1.7km', label: 'Zipline Length', icon: 'fa-wind' },
+      { number: '100+', label: 'Dive Spots Nearby', icon: 'fa-water' },
+      { number: '15+', label: 'Years Experience', icon: 'fa-award' },
+      { number: '10k+', label: 'Happy Guests', icon: 'fa-smile' }
+    ],
+    []
+  )
 
-  const stickyItems = useMemo(() => ([
-    { id: 'zipline', label: 'Zipline' },
-    { id: 'diving', label: 'Diving' },
-    { id: 'activity-why-us', label: 'Why us' },
-    { id: 'activity-booking', label: 'Book' }
-  ]), [])
+  const stickyItems = useMemo(
+    () => [
+      { id: 'zipline', label: 'Zipline' },
+      { id: 'diving', label: 'Diving' },
+      { id: 'activity-why-us', label: 'Why us' },
+      { id: 'activity-booking', label: 'Book' }
+    ],
+    []
+  )
 
+  // Track scroll position and visible sections for the sticky nav.
   useEffect(() => {
     if (location.pathname !== '/activity') {
       return undefined
@@ -98,6 +119,7 @@ const Activity = () => {
       .filter(Boolean)
 
     const heroSection = document.getElementById('activity-overview')
+
     const handleScroll = () => {
       const heroBottom = heroSection?.getBoundingClientRect().bottom ?? 0
       setShowStickyNav(heroBottom < 140)
@@ -129,6 +151,7 @@ const Activity = () => {
     }
   }, [location.pathname, stickyItems])
 
+  // Render nested routes for the activity sub-pages.
   if (location.pathname !== '/activity') {
     return (
       <AnimatePresence mode="wait">
@@ -147,17 +170,18 @@ const Activity = () => {
 
   return (
     <div className="activity-page">
-      {(!imagesReady || !videoReady) && (
-        <PageLoader text="Loading adventures..." />
-      )}
+      {/* Loader overlays until hero images and video are ready */}
+      {(!imagesReady || !videoReady) && <PageLoader text="Loading adventures..." />}
+
       <Navbar />
 
+      {/* Background video hero layer shown behind the activity hub content. */}
       <section className="activity-hero-media">
-        <video 
-          className="activity-hero-video" 
-          autoPlay 
-          muted 
-          loop 
+        <video
+          className="activity-hero-video"
+          autoPlay
+          muted
+          loop
           playsInline
           preload="auto"
           onLoadedData={() => setVideoReady(true)}
@@ -169,6 +193,7 @@ const Activity = () => {
       <ActivityHubHero facts={heroFacts} />
       <ActivityStickyNav items={stickyItems} activeId={activeSection} isVisible={showStickyNav} />
 
+      {/* Activity cards section with reveal animation and CTA text. */}
       <motion.section
         className="activities-section"
         id="activity-cards"
@@ -198,6 +223,7 @@ const Activity = () => {
         </div>
       </motion.section>
 
+      {/* Why choose us section with stats cards. */}
       <motion.section
         className="experience-section"
         id="activity-why-us"
@@ -235,6 +261,7 @@ const Activity = () => {
         </div>
       </motion.section>
 
+      {/* Bottom call-to-action section. */}
       <motion.section
         className="activity-cta"
         id="activity-booking"

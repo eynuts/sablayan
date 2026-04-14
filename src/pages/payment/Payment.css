@@ -1,4 +1,7 @@
-/* Payment Page Styles - Sidell Beach Resort */
+/* Payment Page Styles - Sidell Beach Resort
+   Styles for the payment confirmation page, QR instructions,
+   booking summary, and receipt upload form.
+*/
 
 #payment-page-root {
   position: relative;

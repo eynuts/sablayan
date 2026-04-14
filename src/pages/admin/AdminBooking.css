@@ -361,6 +361,9 @@
 .revert-btn { background: #fef3c7; color: #92400e; }
 .revert-btn:hover { background: #fde68a; }
 
+.decline-btn { background: #fed7aa; color: #9a3412; }
+.decline-btn:hover { background: #fdba74; }
+
 .delete-btn { background: #fee2e2; color: #991b1b; }
 .delete-btn:hover { background: #fecaca; }
 
@@ -666,6 +669,18 @@
   background: #f59e0b;
   transform: translateY(-2px);
   box-shadow: 0 12px 25px rgba(251, 191, 36, 0.3);
+}
+
+.decline-btn-large {
+  background: #fb923c;
+  color: #7c2d12;
+  box-shadow: 0 10px 20px rgba(251, 146, 60, 0.2);
+}
+
+.decline-btn-large:hover {
+  background: #f97316;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 25px rgba(249, 115, 22, 0.3);
 }
 
 .delete-btn-large {

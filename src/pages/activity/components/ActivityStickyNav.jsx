@@ -1,4 +1,5 @@
 const ActivityStickyNav = ({ items, activeId, isVisible }) => {
+  // Render the small sticky section navigation on the activity hub page.
   return (
     <div className={`activity-sticky-nav ${isVisible ? 'visible' : ''}`} aria-hidden={!isVisible}>
       <div className="section-container">

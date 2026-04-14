@@ -1,3 +1,4 @@
+// Footer component for the site, including branding, quick links, experiences, and contact details
 import { Link } from 'react-router-dom'
 import './Footer.css'
 
@@ -6,6 +7,7 @@ const Footer = () => {
     <footer className="footer">
       <div className="footer-container">
         <div className="footer-top">
+          {/* Footer brand section with logo, description, and social media links */}
           <div className="footer-brand">
             <Link to="/" className="footer-logo">
               <div className="logo-icon">
@@ -73,6 +75,7 @@ const Footer = () => {
         </div>
 
         <div className="footer-bottom">
+          {/* Bottom footer content with copyright and legal links */}
           <div className="footer-bottom-content">
             <p className="copyright">&copy; {new Date().getFullYear()} Sablayan Adventure Camp. All rights reserved.</p>
             <div className="footer-legal">

@@ -14,6 +14,7 @@ const ActivityCard = ({ activity, index }) => {
       viewport={{ once: true, amount: 0.25 }}
       whileHover={cardHoverMotion(reducedMotion)}
     >
+      {/* Activity image panel with gradient overlay and badge */}
       <div className="activity-showcase-media">
         <img src={activity.image} alt={activity.title} />
         <div className="activity-showcase-gradient"></div>

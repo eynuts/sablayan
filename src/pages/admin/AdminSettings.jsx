@@ -1,3 +1,5 @@
+// Site and booking settings management page.
+// Loads general settings from Firebase and allows admins to save updated values.
 import { useEffect, useState } from 'react'
 import { onValue, ref, set } from 'firebase/database'
 import { BOOKING_TIMEZONE, CHECK_IN_TIME, CHECK_OUT_TIME } from '../../utils/bookingPolicy'

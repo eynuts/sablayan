@@ -1,3 +1,6 @@
+/* PageLoader.css - Styles for the PageLoader component */
+
+/* Base styles for the page loader container */
 .page-loader {
   display: flex;
   align-items: center;
@@ -7,6 +10,7 @@
     #fcfbf9;
 }
 
+/* Fullscreen variant - covers the entire viewport */
 .page-loader.fullscreen {
   position: fixed;
   inset: 0;
@@ -15,12 +19,14 @@
   z-index: 9999;
 }
 
+/* Inline variant - displays within a container with minimum height */
 .page-loader.inline {
   min-height: 320px;
   width: 100%;
   border-radius: 24px;
 }
 
+/* Content wrapper for the loader elements */
 .page-loader-content {
   display: flex;
   flex-direction: column;
@@ -30,6 +36,7 @@
   padding: 2rem;
 }
 
+/* Animated spinner element */
 .page-loader-spinner {
   width: 70px;
   height: 70px;
@@ -40,6 +47,7 @@
   margin-bottom: 2.5rem;
 }
 
+/* Title text styling */
 .page-loader-title {
   font-family: 'Playfair Display', serif;
   font-size: 2.2rem;
@@ -49,6 +57,7 @@
   animation: page-loader-pulse 2s infinite;
 }
 
+/* Loading text styling */
 .page-loader-text {
   font-size: 0.9rem;
   color: #d94e28;
@@ -57,12 +66,14 @@
   font-weight: 600;
 }
 
+/* Keyframe animation for spinner rotation */
 @keyframes page-loader-spin {
   to {
     transform: rotate(360deg);
   }
 }
 
+/* Keyframe animation for content fade-in effect */
 @keyframes page-loader-fade-in {
   from {
     opacity: 0;
@@ -75,6 +86,7 @@
   }
 }
 
+/* Keyframe animation for title pulsing effect */
 @keyframes page-loader-pulse {
   0%,
   100% {
@@ -86,6 +98,7 @@
   }
 }
 
+/* Responsive styles for smaller screens */
 @media (max-width: 768px) {
   .page-loader-title {
     font-size: 1.8rem;

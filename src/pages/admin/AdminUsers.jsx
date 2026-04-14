@@ -1,3 +1,5 @@
+// User management page for admins.
+// Combines user profile data and booking history to display guest metrics.
 import { useEffect, useMemo, useState } from 'react'
 import { onValue, ref } from 'firebase/database'
 import { db, syncExpiredPendingBookings } from '../../firebase'

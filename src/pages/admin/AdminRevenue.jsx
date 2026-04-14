@@ -1,3 +1,5 @@
+// Revenue management page for admins.
+// Loads bookings and lets the admin confirm or mark payments as paid.
 import { useEffect, useState } from 'react'
 import { onValue, ref, update } from 'firebase/database'
 import { db, syncExpiredPendingBookings } from '../../firebase'

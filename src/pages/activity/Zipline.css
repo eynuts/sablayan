@@ -1,3 +1,4 @@
+/* Zipline page theme variables and shared UI defaults. */
 :root {
   --zv3-primary: #d94e28;
   --zv3-primary-dark: #bf3f1d;
@@ -616,6 +617,7 @@
 /* ===========================
    ANIMATIONS
    =========================== */
+/* Simple fade-up animation used by hero content and cards. */
 @keyframes zv3FadeUp {
   from { opacity: 0; transform: translateY(40px); }
   to { opacity: 1; transform: translateY(0); }

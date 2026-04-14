@@ -1,3 +1,5 @@
+// Rooms management page for admins.
+// Includes inventory display, add/edit modal, image upload, and room details management.
 import { useEffect, useMemo, useState } from 'react'
 import { onValue, ref, remove, set } from 'firebase/database'
 import { db } from '../../firebase'
@@ -70,6 +72,7 @@ const AdminRooms = () => {
     return new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP', maximumFractionDigits: 0 }).format(price)
   }
 
+  // Show temporary alert modal messages for create/edit/delete feedback.
   const showAlert = (message, type = 'success') => {
     setAlertMessage(message)
     setAlertType(type)

@@ -14,6 +14,7 @@ const Diving = () => {
   const [imagesReady, setImagesReady] = useState(false)
   const [videoReady, setVideoReady] = useState(false)
 
+  // Preload diving page images before removing the hero loader.
   useEffect(() => {
     let active = true
 
@@ -37,23 +38,31 @@ const Diving = () => {
   ]
 
   const equipment = [
-    'BCD', 'Regulator', 'Wet Suit', 'Mask & Snorkel', 'Fins', 'Boots', 'Weights with Belt', 'Tank with Air', 'Complete set (3 tanks)', 'Boat'
+    'BCD',
+    'Regulator',
+    'Wet Suit',
+    'Mask & Snorkel',
+    'Fins',
+    'Boots',
+    'Weights with Belt',
+    'Tank with Air',
+    'Complete set (3 tanks)',
+    'Boat'
   ]
 
   return (
     <div className="diving-page">
-      {(!imagesReady || !videoReady) && (
-        <PageLoader text="Loading diving highlights..." />
-      )}
+      {/* Show the page loader until both images and video are ready. */}
+      {(!imagesReady || !videoReady) && <PageLoader text="Loading diving highlights..." />}
       <Navbar />
-      
-      {/* Hero Section */}
+
+      {/* Hero Section: full-screen diving video with overlay text. */}
       <section className="diving-hero">
-        <video 
-          className="diving-hero-video" 
-          autoPlay 
-          muted 
-          loop 
+        <video
+          className="diving-hero-video"
+          autoPlay
+          muted
+          loop
           playsInline
           preload="auto"
           onLoadedData={() => setVideoReady(true)}
@@ -68,7 +77,7 @@ const Diving = () => {
         </div>
       </section>
 
-      {/* Intro Section - Apo Reef Diving */}
+      {/* Intro Section that highlights the Apo Reef diving experience. */}
       <section className="diving-intro">
         <div className="section-container">
           <div className="intro-grid">
@@ -78,13 +87,16 @@ const Diving = () => {
             <div className="intro-text">
               <span className="section-tag">Explore Apo Reef</span>
               <h2>Apo Reef Diving</h2>
-              <p className="highlight-p">The fishing ban within Apo Reef has been a challenge for local fishermen, but eco-tourism is helping to compensate. This shift supports a more ecologically responsible system for sustaining this world-renowned natural park.</p>
+              <p className="highlight-p">
+                The fishing ban within Apo Reef has been a challenge for local fishermen, but eco-tourism is helping to compensate.
+                This shift supports a more ecologically responsible system for sustaining this world-renowned natural park.
+              </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Whale Shark Section */}
+      {/* Whale Shark section with feature cards and a supporting image. */}
       <section className="whale-shark-section">
         <div className="whale-shark-overlay"></div>
         <div className="section-container">
@@ -92,7 +104,10 @@ const Diving = () => {
             <div className="whale-shark-text">
               <span className="section-tag">Nature's Surprise</span>
               <h2>The Gentle Giant</h2>
-              <p>The Whale Sharks, locally known as "Butanding," have made a surprising and welcome appearance in the clear waters of Sablayan. Previously more common in Bicol, these majestic creatures are now gracing our shores, offering a truly magical encounter for our visitors.</p>
+              <p>
+                The Whale Sharks, locally known as "Butanding," have made a surprising and welcome appearance in the clear waters of Sablayan.
+                Previously more common in Bicol, these majestic creatures are now gracing our shores, offering a truly magical encounter for our visitors.
+              </p>
               <div className="whale-shark-features">
                 <div className="feature-item">
                   <i className="fas fa-water"></i>
@@ -111,7 +126,7 @@ const Diving = () => {
         </div>
       </section>
 
-      {/* Diving Courses Section */}
+      {/* Diving courses section listing available training programs. */}
       <section className="diving-courses">
         <div className="section-container">
           <div className="section-header-centered">
@@ -134,7 +149,7 @@ const Diving = () => {
         </div>
       </section>
 
-      {/* Equipment Rental Section */}
+      {/* Equipment rental section describing available dive gear. */}
       <section className="equipment-rental">
         <div className="section-container">
           <div className="rental-grid">
@@ -144,7 +159,9 @@ const Diving = () => {
               <p>We provide high-quality diving equipment available for rental per day to ensure your safety and comfort underwater.</p>
               <ul className="equipment-list">
                 {equipment.map((item, index) => (
-                  <li key={index}><i className="fas fa-check-circle"></i> {item}</li>
+                  <li key={index}>
+                    <i className="fas fa-check-circle"></i> {item}
+                  </li>
                 ))}
               </ul>
             </div>

@@ -1,5 +1,6 @@
 /* ================================ */
 /* DIVING PAGE STYLES              */
+/* Shared diving page layout and component styling. */
 /* ================================ */
 
 .diving-page {
@@ -7,7 +8,7 @@
   min-height: 100vh;
 }
 
-/* Diving Hero */
+/* Diving Hero: full-screen background video with overlay content. */
 .diving-hero {
   position: relative;
   height: 100vh;
@@ -83,6 +84,7 @@
 }
 
 /* Diving Intro */
+/* Intro section introducing Apo Reef diving and its conservation story. */
 .diving-intro {
   padding: 10rem 0;
   background: white;
@@ -245,7 +247,7 @@
   font-size: 0.9rem;
 }
 
-/* Whale Shark Section */
+/* Whale Shark section: highlight local marine wildlife and sanctuary experience. */
 .whale-shark-section {
   position: relative;
   padding: 10rem 0;
@@ -348,7 +350,7 @@
   filter: blur(20px);
 }
 
-/* Diving Courses */
+/* Diving Courses section: display training program cards. */
 .diving-courses {
   padding: 10rem 0;
   background: #f8fbfb;
@@ -458,7 +460,7 @@
   font-style: italic;
 }
 
-/* Equipment Rental */
+/* Equipment Rental section: display rental gear and feature list. */
 .equipment-rental {
   padding: 10rem 0;
   background: white;
@@ -519,7 +521,7 @@
   box-shadow: 0 40px 80px rgba(0, 0, 0, 0.12);
 }
 
-/* Diving CTA */
+/* Diving CTA section: a final booking prompt with glass-card styling. */
 .diving-cta {
   padding: 10rem 0;
   position: relative;

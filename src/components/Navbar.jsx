@@ -4,22 +4,29 @@ import { useAuth } from '../AuthContext'
 import { getAuthErrorMessage } from '../firebase'
 import './Navbar.css'
 
+// Navbar component - Main navigation bar with responsive design, user authentication, and mobile menu
 const Navbar = () => {
-  const [scrolled, setScrolled] = useState(false)
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
-  const [firstName, setFirstName] = useState('')
-  const [lastName, setLastName] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [authError, setAuthError] = useState('')
-  const [isSignUpMode, setIsSignUpMode] = useState(false)
-  const [isSigningIn, setIsSigningIn] = useState(false)
-  const { user, loginWithEmail, signUpWithEmail, logout } = useAuth()
-  const location = useLocation()
-  const userMenuRef = useRef(null)
-  const mobileUserMenuRef = useRef(null)
+  // State for UI interactions
+  const [scrolled, setScrolled] = useState(false) // Tracks if page has been scrolled for styling
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false) // Controls mobile menu visibility
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false) // Controls user dropdown menu visibility
 
+  // State for authentication form
+  const [firstName, setFirstName] = useState('') // First name input for signup
+  const [lastName, setLastName] = useState('') // Last name input for signup
+  const [email, setEmail] = useState('') // Email input for login/signup
+  const [password, setPassword] = useState('') // Password input for login/signup
+  const [authError, setAuthError] = useState('') // Error message for authentication
+  const [isSignUpMode, setIsSignUpMode] = useState(false) // Toggles between login and signup modes
+  const [isSigningIn, setIsSigningIn] = useState(false) // Loading state during authentication
+
+  // Hooks and context
+  const { user, loginWithEmail, signUpWithEmail, logout } = useAuth() // Authentication context
+  const location = useLocation() // Current route location
+  const userMenuRef = useRef(null) // Ref for desktop user menu container
+  const mobileUserMenuRef = useRef(null) // Ref for mobile user menu container
+
+  // Helper function to extract first name from display name or email
   const getFirstName = (name, fallbackEmail = '') => {
     const trimmedName = name?.trim()
 
@@ -35,15 +42,18 @@ const Navbar = () => {
     return 'Account'
   }
 
+  // Helper function to get the first letter for avatar display
   const getAvatarLetter = (name, fallbackEmail = '') => {
     const firstNameValue = getFirstName(name, fallbackEmail)
     return firstNameValue.charAt(0).toUpperCase()
   }
 
+  // Computed values for display
   const displayFirstName = getFirstName(user?.displayName, user?.email)
   const displayAvatarLetter = getAvatarLetter(user?.displayName, user?.email)
-  const accountAvatarLetter = getAvatarLetter('', '')
+  const accountAvatarLetter = getAvatarLetter('', '') // Default avatar letter
 
+  // Effect to handle scroll-based styling changes
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 20)
@@ -53,11 +63,12 @@ const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
+  // Effect to handle clicks outside user menus to close them
   useEffect(() => {
     const handleClickOutside = (event) => {
       const isOutsideDesktop = userMenuRef.current && !userMenuRef.current.contains(event.target);
       const isOutsideMobile = mobileUserMenuRef.current && !mobileUserMenuRef.current.contains(event.target);
-      
+
       if (isOutsideDesktop && isOutsideMobile) {
         setIsUserMenuOpen(false)
       }
@@ -66,6 +77,7 @@ const Navbar = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
+  // Toggle mobile menu and manage body scroll lock
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen)
     if (!isMobileMenuOpen) {
@@ -77,16 +89,19 @@ const Navbar = () => {
     }
   }
 
+  // Close mobile menu and restore scroll
   const closeMobileMenu = () => {
     setIsMobileMenuOpen(false)
     document.body.style.overflow = 'auto'
     document.documentElement.style.overflow = 'auto'
   }
 
+  // Toggle user dropdown menu
   const toggleUserMenu = () => {
     setIsUserMenuOpen(!isUserMenuOpen)
   }
 
+  // Handle email-based authentication (login/signup)
   const handleEmailAuth = async (event) => {
     event.preventDefault()
     setAuthError('')
@@ -110,13 +125,16 @@ const Navbar = () => {
     }
   }
 
+  // Check if a navigation link is active based on current route
   const isActive = (path) => {
     return location.pathname === path ? 'active' : ''
   }
 
   return (
+    // Main navigation element with conditional classes for scroll and mobile menu state
     <nav className={`navbar ${scrolled ? 'scrolled' : ''} ${isMobileMenuOpen ? 'menu-open' : ''}`}>
       <div className="navbar-container">
+        {/* Logo and brand link */}
         <Link to="/" className="navbar-logo" onClick={closeMobileMenu}>
           <div className="logo-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -128,7 +146,8 @@ const Navbar = () => {
             <span className="logo-sub">Resort & Dive Shop</span>
           </div>
         </Link>
-        
+
+        {/* Desktop navigation links */}
         <div className="navbar-links">
           <Link to="/" className={isActive('/')}>Home</Link>
           <Link to="/accommodations" className={isActive('/accommodations')}>Rooms</Link>
@@ -138,12 +157,14 @@ const Navbar = () => {
           <Link to="/booking" className={isActive('/booking')}>Bookings</Link>
         </div>
 
+        {/* Right-side actions: notifications and user menu */}
         <div className="navbar-actions">
           <button className="nav-icon-btn notification-btn">
             <i className="fas fa-bell"></i>
             <span className="notification-dot"></span>
           </button>
-          
+
+          {/* User menu - authenticated vs unauthenticated */}
           {user ? (
             <div className="user-menu-container" ref={userMenuRef}>
               <div className="user-profile-trigger" onClick={toggleUserMenu}>
@@ -153,6 +174,7 @@ const Navbar = () => {
                 </div>
               </div>
 
+              {/* User dropdown menu when authenticated */}
               {isUserMenuOpen && (
                 <div className="user-dropdown-menu">
                   <div className="user-dropdown-header">
@@ -180,12 +202,14 @@ const Navbar = () => {
                 </div>
               </div>
 
+              {/* Authentication dropdown menu when not authenticated */}
               {isUserMenuOpen && (
                 <div className="user-dropdown-menu auth-dropdown-menu">
                   <div className="user-dropdown-header">
                     <p className="user-full-name">{isSignUpMode ? 'Create Account' : 'Login With Email'}</p>
                   </div>
                   <form className="auth-dropdown-form" onSubmit={handleEmailAuth}>
+                    {/* Signup fields - conditionally rendered */}
                     {isSignUpMode && (
                       <>
                         <input
@@ -204,6 +228,7 @@ const Navbar = () => {
                         />
                       </>
                     )}
+                    {/* Common login/signup fields */}
                     <input
                       type="email"
                       placeholder="Email address"
@@ -218,7 +243,9 @@ const Navbar = () => {
                       onChange={(event) => setPassword(event.target.value)}
                       required
                     />
+                    {/* Error display */}
                     {authError && <p className="auth-dropdown-error">{authError}</p>}
+                    {/* Submit button with loading state */}
                     <button type="submit" className="auth-submit-btn" disabled={isSigningIn}>
                       {isSigningIn
                         ? (isSignUpMode ? 'Creating account...' : 'Signing in...')
@@ -226,6 +253,7 @@ const Navbar = () => {
                       }
                     </button>
 
+                    {/* Toggle between login and signup modes */}
                     <button
                       type="button"
                       className="auth-mode-toggle"
@@ -244,6 +272,7 @@ const Navbar = () => {
             </div>
           )}
         </div>
+        {/* Mobile hamburger menu button */}
         <button className={`hamburger ${isMobileMenuOpen ? 'active' : ''}`} onClick={toggleMobileMenu}>
           <span></span>
           <span></span>
@@ -253,6 +282,7 @@ const Navbar = () => {
 
       {/* Mobile Menu Overlay */}
       <div className={`mobile-menu ${isMobileMenuOpen ? 'active' : ''}`}>
+        {/* User info section for authenticated users */}
         {user && (
           <div className="mobile-user-info">
             <div className="mobile-user-avatar theme-avatar" aria-hidden="true">
@@ -262,6 +292,8 @@ const Navbar = () => {
             <p>{user.email}</p>
           </div>
         )}
+
+        {/* Mobile navigation links */}
         <div className="mobile-menu-links">
           <Link to="/" onClick={closeMobileMenu}>
             <i className="fas fa-home"></i> <span>Home</span>
@@ -278,12 +310,14 @@ const Navbar = () => {
           <Link to="/booking" onClick={closeMobileMenu}>
             <i className="fas fa-calendar-check"></i> <span>Bookings</span>
           </Link>
+          {/* Profile link for authenticated users */}
           {user && (
             <Link to="/profile" onClick={closeMobileMenu}>
               <i className="fas fa-user-circle"></i> <span>Profile</span>
             </Link>
           )}
-          
+
+          {/* Authentication section in mobile menu */}
           <div className="mobile-auth-container">
             {user ? (
               <div className="mobile-auth-authenticated">
@@ -292,9 +326,9 @@ const Navbar = () => {
                 </button>
               </div>
             ) : (
-              <Link 
-                to="/auth" 
-                className="mobile-auth-trigger-container" 
+              <Link
+                to="/auth"
+                className="mobile-auth-trigger-container"
                 onClick={closeMobileMenu}
               >
                 <div className="user-profile-trigger">
@@ -307,6 +341,8 @@ const Navbar = () => {
             )}
           </div>
         </div>
+
+        {/* Social media links in mobile menu */}
         <div className="mobile-menu-social">
           <a href="#"><i className="fab fa-instagram"></i></a>
           <a href="#"><i className="fab fa-facebook-f"></i></a>

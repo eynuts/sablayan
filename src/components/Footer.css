@@ -1,4 +1,4 @@
-.footer {
+/* Footer styles for page footer layout and theme */.footer {
   background: #0a191f;
   color: white;
   padding: 10rem 0 3rem;
@@ -199,6 +199,7 @@
   }
 }
 
+/* Responsive styles for small screens */
 @media (max-width: 600px) {
   .footer-container {
     padding: 0 1.25rem;

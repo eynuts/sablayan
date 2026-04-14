@@ -3,6 +3,8 @@ import { createRevealVariants, createStaggerContainer } from '../activityMotion'
 
 const ActivityHubHero = ({ facts }) => {
   const reducedMotion = useReducedMotion()
+
+  // Stagger the entrance of hero content pieces when motion is allowed.
   const containerVariants = createStaggerContainer(reducedMotion, 0.1)
 
   return (
@@ -11,6 +13,7 @@ const ActivityHubHero = ({ facts }) => {
       <div className="activity-hero-orb activity-hero-orb-one"></div>
       <div className="activity-hero-orb activity-hero-orb-two"></div>
       <div className="section-container activity-hero-shell">
+        {/* Main hero content with motion reveal effects. */}
         <motion.div
           className="activity-hero-content"
           variants={containerVariants}
@@ -37,6 +40,7 @@ const ActivityHubHero = ({ facts }) => {
           </motion.div>
         </motion.div>
 
+        {/* Quick facts panel sits beside the hero content. */}
         <motion.aside
           className="activity-hero-panel"
           variants={createRevealVariants(reducedMotion, 0.16)}

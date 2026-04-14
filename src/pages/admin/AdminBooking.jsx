@@ -1,3 +1,5 @@
+// Booking management page for admins.
+// Fetches booking records from Firebase and provides search, filter, and action controls.
 import { useEffect, useState } from 'react'
 import { onValue, ref, remove, update } from 'firebase/database'
 import { db, syncExpiredPendingBookings } from '../../firebase'
@@ -36,12 +38,50 @@ const AdminBooking = () => {
     return () => unsubscribe()
   }, [])
 
-  const handleConfirmBooking = async (id) => {
+  // Update booking status to confirmed in Firebase.
+  const handleConfirmBooking = async (id, booking) => {
     try {
       await update(ref(db, `bookings/${id}`), { 
         paymentStatus: 'confirmed',
         bookingStatus: 'confirmed'
       })
+
+      // Send booking approval email
+      if (booking && booking.email) {
+        try {
+          const fullName = `${booking.firstName || ''} ${booking.lastName || ''}`.trim() || 'Guest'
+          const bookingType = booking.type === 'room' 
+            ? (booking.room?.title || 'Room') 
+            : (booking.activity?.title || 'Zipline Adventure')
+          const bookingDate = booking.type === 'room' ? booking.checkIn : booking.date
+          
+          const emailResponse = await fetch('https://sablayan-backend.onrender.com/emailjs/booking-approval', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              name: fullName,
+              email: booking.email,
+              booking_type: bookingType,
+              date: bookingDate,
+              guests: booking.guests.toString(),
+              amount: booking.depositAmount.toString(),
+              receipt_id: booking.referenceNumber || booking.id
+            })
+          })
+
+          const emailResult = await emailResponse.json()
+          if (emailResult.success) {
+            console.log('✓ Approval email sent successfully')
+          } else {
+            console.warn('Email sending failed:', emailResult.error)
+          }
+        } catch (emailError) {
+          console.warn('Email service error:', emailError)
+        }
+      }
+
       alert('Booking confirmed successfully!')
     } catch (error) {
       console.error('Error confirming booking:', error)
@@ -49,16 +89,122 @@ const AdminBooking = () => {
     }
   }
 
-  const handleRevertBooking = async (id) => {
+  const handleRevertBooking = async (id, booking) => {
     try {
       await update(ref(db, `bookings/${id}`), { 
         paymentStatus: 'pending',
         bookingStatus: 'pending'
       })
+
+      // Send booking status update email (Reverted to Pending)
+      if (booking && booking.email) {
+        try {
+          const fullName = `${booking.firstName || ''} ${booking.lastName || ''}`.trim() || 'Guest'
+          const bookingType = booking.type === 'room' 
+            ? (booking.room?.title || 'Room') 
+            : (booking.activity?.title || 'Zipline Adventure')
+          const bookingDate = booking.type === 'room' ? booking.checkIn : booking.date
+
+          const emailResponse = await fetch('https://sablayan-backend.onrender.com/emailjs/booking-status-update', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              name: fullName,
+              email: booking.email,
+              booking_type: bookingType,
+              date: bookingDate,
+              guests: booking.guests.toString(),
+              status: 'Reverted to Pending'
+            })
+          })
+
+          const emailResult = await emailResponse.json()
+          if (emailResult.success) {
+            console.log('✓ Status update email sent successfully')
+          } else {
+            console.warn('Email sending failed:', emailResult.error)
+          }
+        } catch (emailError) {
+          console.warn('Email service error:', emailError)
+        }
+      }
+
       alert('Booking reverted to pending!')
     } catch (error) {
       console.error('Error reverting booking:', error)
       alert('Failed to revert booking.')
+    }
+  }
+
+  const handleCancelBooking = async (id) => {
+    if (!window.confirm('Are you sure you want to cancel this booking?')) {
+      return
+    }
+
+    try {
+      await update(ref(db, `bookings/${id}`), { 
+        paymentStatus: 'cancelled',
+        bookingStatus: 'cancelled'
+      })
+      alert('Booking cancelled successfully!')
+    } catch (error) {
+      console.error('Error cancelling booking:', error)
+      alert('Failed to cancel booking.')
+    }
+  }
+
+  const handleDeclineBooking = async (id, booking) => {
+    if (!window.confirm('Are you sure you want to decline this booking?')) {
+      return
+    }
+
+    try {
+      await update(ref(db, `bookings/${id}`), { 
+        paymentStatus: 'declined',
+        bookingStatus: 'declined'
+      })
+
+      // Send booking status update email (Declined)
+      if (booking && booking.email) {
+        try {
+          const fullName = `${booking.firstName || ''} ${booking.lastName || ''}`.trim() || 'Guest'
+          const bookingType = booking.type === 'room' 
+            ? (booking.room?.title || 'Room') 
+            : (booking.activity?.title || 'Zipline Adventure')
+          const bookingDate = booking.type === 'room' ? booking.checkIn : booking.date
+
+          const emailResponse = await fetch('https://sablayan-backend.onrender.com/emailjs/booking-status-update', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              name: fullName,
+              email: booking.email,
+              booking_type: bookingType,
+              date: bookingDate,
+              guests: booking.guests.toString(),
+              status: 'Declined'
+            })
+          })
+
+          const emailResult = await emailResponse.json()
+          if (emailResult.success) {
+            console.log('✓ Decline email sent successfully')
+          } else {
+            console.warn('Email sending failed:', emailResult.error)
+          }
+        } catch (emailError) {
+          console.warn('Email service error:', emailError)
+        }
+      }
+
+      alert('Booking declined successfully!')
+    } catch (error) {
+      console.error('Error declining booking:', error)
+      alert('Failed to decline booking.')
     }
   }
 
@@ -301,7 +447,7 @@ const AdminBooking = () => {
                           {booking.paymentStatus === 'pending' && (
                             <button
                               className="confirm-btn"
-                              onClick={() => handleConfirmBooking(booking.id)}
+                              onClick={() => handleConfirmBooking(booking.id, booking)}
                               title="Confirm Booking"
                             >
                               <i className="fas fa-check"></i>
@@ -310,10 +456,19 @@ const AdminBooking = () => {
                           {booking.paymentStatus === 'confirmed' && (
                             <button
                               className="revert-btn"
-                              onClick={() => handleRevertBooking(booking.id)}
+                              onClick={() => handleRevertBooking(booking.id, booking)}
                               title="Revert to Pending"
                             >
                               <i className="fas fa-undo"></i>
+                            </button>
+                          )}
+                          {booking.paymentStatus !== 'cancelled' && (
+                            <button
+                              className="decline-btn"
+                              onClick={() => handleDeclineBooking(booking.id, booking)}
+                              title="Decline Booking"
+                            >
+                              <i className="fas fa-times"></i>
                             </button>
                           )}
                           <button
@@ -416,7 +571,7 @@ const AdminBooking = () => {
                   <button
                     className="confirm-btn-large"
                     onClick={() => {
-                      handleConfirmBooking(selectedBooking.id)
+                      handleConfirmBooking(selectedBooking.id, selectedBooking)
                       setSelectedBooking(null)
                     }}
                   >
@@ -427,11 +582,22 @@ const AdminBooking = () => {
                   <button
                     className="revert-btn-large"
                     onClick={() => {
-                      handleRevertBooking(selectedBooking.id)
+                      handleRevertBooking(selectedBooking.id, selectedBooking)
                       setSelectedBooking(null)
                     }}
                   >
                     <i className="fas fa-undo"></i> Revert to Pending
+                  </button>
+                )}
+                {selectedBooking.paymentStatus !== 'cancelled' && (
+                  <button
+                    className="decline-btn-large"
+                    onClick={() => {
+                      handleDeclineBooking(selectedBooking.id, selectedBooking)
+                      setSelectedBooking(null)
+                    }}
+                  >
+                    <i className="fas fa-times"></i> Decline Booking
                   </button>
                 )}
                 <button
