@@ -36,7 +36,7 @@ export const AdminAuthProvider = ({ children }) => {
         }
 
         setUser(session)
-        setIsAdmin(session?.role === 'admin')
+        setIsAdmin(['admin', 'moderator'].includes(session?.role))
 
         // Allow both admin and moderator roles to access admin area
         if (session && !['admin', 'moderator'].includes(session.role)) {
@@ -66,7 +66,7 @@ export const AdminAuthProvider = ({ children }) => {
   const loginWithEmail = async (email, password) => {
     const session = await signInAdminWithEmailPassword(email, password)
     setUser(session)
-    setIsAdmin(session?.role === 'admin')
+    setIsAdmin(['admin', 'moderator'].includes(session?.role))
     return session
   }
 

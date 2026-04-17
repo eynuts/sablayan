@@ -171,6 +171,20 @@ const AdminUsers = () => {
     admins: users.filter((item) => item.role === 'admin').length
   }
 
+  // Check if moderator - they don't have permission to view users
+  if (user?.role === 'moderator') {
+    return (
+      <div className="admin-users-container">
+        <div className="permission-denied-container">
+          <i className="fas fa-lock"></i>
+          <h2>Permission Denied</h2>
+          <p>You don't have permission to access the Users section.</p>
+          <p className="hint">Only administrators can manage users.</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="admin-users-container">
       <div className="admin-stats-grid">
@@ -337,34 +351,46 @@ const AdminUsers = () => {
               <div className="info-sections">
                 <div className="info-section">
                   <div className="section-header">
-                    <i className="fas fa-info-circle"></i>
+                    <i className="fas fa-id-card"></i>
                     <span>Account Overview</span>
                   </div>
                   <div className="premium-info-grid">
-                    <div className="p-info-item">
-                      <label>Email Address</label>
-                      <div className="p-value">{selectedUser?.email}</div>
-                    </div>
-                    <div className="p-info-item">
-                      <label>Phone Number</label>
-                      <div className="p-value">{selectedUser?.phone || 'Not provided'}</div>
-                    </div>
-                    <div className="p-info-item">
-                      <label>Role / Access</label>
-                      <div className="p-value">
-                        <span className={`p-badge role ${selectedUser?.role}`}>
-                          {selectedUser?.role === 'admin' ? <i className="fas fa-shield-alt"></i> : <i className="fas fa-user"></i>}
-                          {selectedUser?.role}
-                        </span>
+                    <div className="p-info-card">
+                      <div className="p-info-icon"><i className="fas fa-envelope"></i></div>
+                      <div className="p-info-content">
+                        <label>Email Address</label>
+                        <div className="p-value">{selectedUser?.email}</div>
                       </div>
                     </div>
-                    <div className="p-info-item">
-                      <label>Account Status</label>
-                      <div className="p-value">
-                        <span className={`p-badge status ${selectedUser?.status}`}>
-                          {selectedUser?.status === 'active' ? <i className="fas fa-check"></i> : <i className="fas fa-times"></i>}
-                          {selectedUser?.status}
-                        </span>
+                    <div className="p-info-card">
+                      <div className="p-info-icon"><i className="fas fa-phone"></i></div>
+                      <div className="p-info-content">
+                        <label>Phone Number</label>
+                        <div className="p-value">{selectedUser?.phone || 'Not provided'}</div>
+                      </div>
+                    </div>
+                    <div className="p-info-card">
+                      <div className="p-info-icon"><i className="fas fa-user-shield"></i></div>
+                      <div className="p-info-content">
+                        <label>Role / Access</label>
+                        <div className="p-value">
+                          <span className={`p-badge role ${selectedUser?.role}`}>
+                            {selectedUser?.role === 'admin' ? <i className="fas fa-shield-alt"></i> : <i className="fas fa-user"></i>}
+                            {selectedUser?.role}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-info-card">
+                      <div className="p-info-icon"><i className="fas fa-toggle-on"></i></div>
+                      <div className="p-info-content">
+                        <label>Account Status</label>
+                        <div className="p-value">
+                          <span className={`p-badge status ${selectedUser?.status}`}>
+                            {selectedUser?.status === 'active' ? <i className="fas fa-check"></i> : <i className="fas fa-times"></i>}
+                            {selectedUser?.status}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -372,17 +398,24 @@ const AdminUsers = () => {
 
                 <div className="info-section">
                   <div className="section-header">
-                    <i className="fas fa-history"></i>
+                    <i className="fas fa-chart-line"></i>
                     <span>Platform Activity</span>
                   </div>
-                  <div className="p-activity-grid">
-                    <div className="p-activity-card">
-                      <span className="p-act-label">Total Bookings</span>
-                      <span className="p-act-value">{selectedUser?.totalBookings || 0}</span>
+                  <div className="p-activity-card-premium">
+                    <div className="p-act-item">
+                      <div className="p-act-icon"><i className="fas fa-calendar-check"></i></div>
+                      <div className="p-act-content">
+                        <span className="p-act-label">Total Bookings</span>
+                        <span className="p-act-value">{selectedUser?.totalBookings || 0}</span>
+                      </div>
                     </div>
-                    <div className="p-activity-card">
-                      <span className="p-act-label">Joined On</span>
-                      <span className="p-act-value small">{formatDate(selectedUser?.joinedDate)}</span>
+                    <div className="p-act-divider"></div>
+                    <div className="p-act-item">
+                      <div className="p-act-icon"><i className="fas fa-clock"></i></div>
+                      <div className="p-act-content">
+                        <span className="p-act-label">Joined On</span>
+                        <span className="p-act-value small">{formatDate(selectedUser?.joinedDate)}</span>
+                      </div>
                     </div>
                   </div>
                 </div>

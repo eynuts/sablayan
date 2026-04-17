@@ -96,20 +96,15 @@ const Auth = () => {
   // EFFECT 3: Redirect logged-in users
   // ============================================
   // If user is already logged in, automatically redirect them away from auth page
-  // Admin users go to admin panel, regular users go to their intended destination
+  // All users go to their intended destination or home page
   useEffect(() => {
     if (user) {  // Check if user is logged in
-      if (user.role === 'admin') {
-        // Admin users are redirected to the admin dashboard
-        navigate('/admin', { replace: true })
-      } else {
-        // Regular users: redirect to where they were trying to go, or home page
-        const from = location.state?.from  // Get the page they came from (if any)
-        const destination = from
-          ? `${from.pathname || '/'}${from.search || ''}${from.hash || ''}`
-          : '/'  // Default to home page
-        navigate(destination, { replace: true })
-      }
+      // Redirect to where they were trying to go, or home page
+      const from = location.state?.from  // Get the page they came from (if any)
+      const destination = from
+        ? `${from.pathname || '/'}${from.search || ''}${from.hash || ''}`
+        : '/'  // Default to home page
+      navigate(destination, { replace: true })
     }
   }, [user, navigate, location])  // Re-run when user, navigate, or location changes
 

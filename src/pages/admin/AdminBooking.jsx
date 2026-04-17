@@ -4,11 +4,13 @@ import { useEffect, useState } from 'react'
 import { onValue, ref, remove, update } from 'firebase/database'
 import { db, syncExpiredPendingBookings } from '../../firebase'
 import { sendNotificationByEmail } from '../../NotificationContext'
+import { useAdminAuth } from '../../AdminAuthContext'
 import PageLoader from '../../components/PageLoader'
 import { formatCurrency, formatDate, getBookingOperationalStatus, getPaymentStatusMeta, normalizeBookings } from './adminData'
 import './AdminBooking.css'
 
 const AdminBooking = () => {
+  const { user } = useAdminAuth()
   const [bookings, setBookings] = useState([])
   const [bookingsLoading, setBookingsLoading] = useState(true)
   const [selectedBooking, setSelectedBooking] = useState(null)
@@ -535,7 +537,8 @@ const AdminBooking = () => {
                           <button
                             className="delete-btn"
                             onClick={() => handleDeleteBooking(booking.id, booking)}
-                            title="Delete Booking"
+                            title={user?.role === 'moderator' ? 'Admins only' : 'Delete Booking'}
+                            disabled={user?.role === 'moderator'}
                           >
                             <i className="fas fa-trash-alt"></i>
                           </button>

@@ -365,7 +365,8 @@
 .decline-btn:hover { background: #fdba74; }
 
 .delete-btn { background: #fee2e2; color: #991b1b; }
-.delete-btn:hover { background: #fecaca; }
+.delete-btn:hover:not(:disabled) { background: #fecaca; }
+.delete-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* Guest Info in Table */
 .guest-info {

@@ -3,17 +3,21 @@
 import { useEffect, useState } from 'react'
 import { onValue, ref, update } from 'firebase/database'
 import { db, syncExpiredPendingBookings } from '../../firebase'
+import { useAdminAuth } from '../../AdminAuthContext'
 import PageLoader from '../../components/PageLoader'
 import { formatCurrency, getPaymentStatusMeta, normalizeBookings } from './adminData'
+import RevenueDownloadModal from './RevenueDownloadModal'
 import './AdminRevenue.css'
 
 const AdminRevenue = () => {
+  const { user } = useAdminAuth()
   const [payments, setPayments] = useState([])
   const [paymentsLoading, setPaymentsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [viewModalOpen, setViewModalOpen] = useState(false)
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+  const [downloadModalOpen, setDownloadModalOpen] = useState(false)
   const [selectedPayment, setSelectedPayment] = useState(null)
   const [isDeleting, setIsDeleting] = useState(false)
 
@@ -235,6 +239,13 @@ const AdminRevenue = () => {
             <option value="confirmed">Confirmed</option>
             <option value="cancelled">Cancelled</option>
           </select>
+          <button 
+            className="download-btn"
+            onClick={() => setDownloadModalOpen(true)}
+            title="Download Revenue Report"
+          >
+            <i className="fas fa-download"></i> Download Report
+          </button>
         </div>
       </div>
 
@@ -303,7 +314,8 @@ const AdminRevenue = () => {
                       <button
                         className="action-btn delete"
                         onClick={() => handleDeletePayment(payment)}
-                        title="Delete Booking"
+                        title={user?.role === 'moderator' ? 'Admins only' : 'Delete Booking'}
+                        disabled={user?.role === 'moderator'}
                       >
                         <i className="fas fa-trash"></i>
                       </button>
@@ -318,7 +330,7 @@ const AdminRevenue = () => {
 
       {/* View Modal */}
       {viewModalOpen && selectedPayment && (
-        <div className="modal-overlay" onClick={closeViewModal}>
+        <div className="modal-overlay active" onClick={closeViewModal}>
           <div className="modal-content view-booking-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <div className="header-title-group">
@@ -440,7 +452,7 @@ const AdminRevenue = () => {
 
       {/* Delete Modal */}
       {deleteModalOpen && selectedPayment && (
-        <div className="modal-overlay" onClick={closeDeleteModal}>
+        <div className="modal-overlay active" onClick={closeDeleteModal}>
           <div className="modal-content modal-confirm" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>Delete Booking</h2>
@@ -458,13 +470,21 @@ const AdminRevenue = () => {
             </div>
             <div className="modal-footer">
               <button className="btn-secondary" onClick={closeDeleteModal} disabled={isDeleting}>Cancel</button>
-              <button className="btn-danger" onClick={confirmDeletePayment} disabled={isDeleting}>
+              <button className="btn-danger" onClick={confirmDeletePayment} disabled={isDeleting || user?.role === 'moderator'}>
                 {isDeleting ? 'Deleting...' : 'Delete Booking'}
               </button>
             </div>
           </div>
         </div>
       )}
+
+      {/* Download Modal */}
+      <RevenueDownloadModal
+        isOpen={downloadModalOpen}
+        onClose={() => setDownloadModalOpen(false)}
+        payments={payments}
+        stats={stats}
+      />
     </div>
   )
 }

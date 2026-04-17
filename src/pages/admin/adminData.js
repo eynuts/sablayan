@@ -40,6 +40,7 @@ export const normalizeBookings = (data) => {
       paymentStatus: getResolvedPaymentStatus(booking),
       bookingStatus: getResolvedBookingStatus(booking),
       depositAmount: Number(booking?.depositAmount || 0),
+      totalAmount: Number(booking?.totalAmount || booking?.depositAmount || 0),
       guests: Number(booking?.guests || 0)
     }))
     .sort((a, b) => {

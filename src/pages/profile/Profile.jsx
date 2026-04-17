@@ -8,9 +8,10 @@ import Navbar from '../../components/Navbar'
 import Footer from '../../components/Footer'
 import PageLoader from '../../components/PageLoader'
 import { useAuth } from '../../AuthContext'
-import { db, syncExpiredPendingBookings, updateUserAccountProfile } from '../../firebase'
+import { db, syncExpiredPendingBookings, updateUserAccountProfile, changePassword } from '../../firebase'
 import { uploadToCloudinaryUnsigned } from '../../utils/cloudinary'
 import { formatCurrency, formatDate, getBookingOperationalStatus, getPaymentStatusMeta, normalizeBookings } from '../admin/adminData'
+import ChangePasswordModal from './ChangePasswordModal'
 import './Profile.css'
 
 // Maps the booking operational phase to a user-facing message.
@@ -71,6 +72,9 @@ const Profile = () => {
   const [avatarFile, setAvatarFile] = useState(null)
   const [isSaving, setIsSaving] = useState(false)
   const [saveMessage, setSaveMessage] = useState('')
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false)
+  const [isChangingPassword, setIsChangingPassword] = useState(false)
+  const [passwordChangeMessage, setPasswordChangeMessage] = useState('')
 
   // Initialize profile form fields from the authenticated user's display name and photo.
   // This keeps the profile editor in sync with Firebase auth profile values.
@@ -192,6 +196,23 @@ const Profile = () => {
     }
   }
 
+  // Handle password change from modal submission.
+  const handleChangePassword = async (currentPassword, newPassword) => {
+    setIsChangingPassword(true)
+
+    try {
+      await changePassword(user?.uid, currentPassword, newPassword)
+      setPasswordChangeMessage('Password changed successfully.')
+      setIsPasswordModalOpen(false)
+      setTimeout(() => setPasswordChangeMessage(''), 3000)
+    } catch (error) {
+      console.error('Failed to change password:', error)
+      throw error
+    } finally {
+      setIsChangingPassword(false)
+    }
+  }
+
   return (
     <div className="profile-page">
       {bookingsLoading && <PageLoader text="Loading your profile..." />}
@@ -200,7 +221,6 @@ const Profile = () => {
       <section className="profile-hero">
         <div className="profile-hero-overlay"></div>
         <div className="profile-hero-content">
-          <span className="section-tag">Guest Account</span>
           <h1>{user?.displayName || 'Guest Profile'}</h1>
           <p>See your account details and review the reservations connected to your signed-in email.</p>
         </div>
@@ -210,7 +230,6 @@ const Profile = () => {
         <div className="section-container">
           <div className="profile-header-card">
             <div className="profile-header-copy">
-              <span className="profile-kicker">My Account</span>
               <h2>{user?.displayName || 'Guest Profile'}</h2>
               <p>Reservations made while signed in to this account will appear here automatically.</p>
             </div>
@@ -284,7 +303,13 @@ const Profile = () => {
                   <button type="submit" className="profile-primary-link profile-action-btn" disabled={isSaving}>
                     {isSaving ? 'Saving...' : 'Save Profile'}
                   </button>
-                  <Link to="/booking" className="profile-secondary-link">Book a New Stay</Link>
+                  <button
+                    type="button"
+                    className="profile-secondary-link"
+                    onClick={() => setIsPasswordModalOpen(true)}
+                  >
+                    Change Password
+                  </button>
                 </div>
               </form>
             </aside>
@@ -416,6 +441,13 @@ const Profile = () => {
       </main>
 
       <Footer />
+
+      <ChangePasswordModal
+        isOpen={isPasswordModalOpen}
+        onClose={() => setIsPasswordModalOpen(false)}
+        onSubmit={handleChangePassword}
+        isLoading={isChangingPassword}
+      />
     </div>
   )
 }

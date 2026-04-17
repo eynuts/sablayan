@@ -415,6 +415,49 @@ export const getAuthErrorMessage = (error, mode = 'signin') => {
     : 'Sign in failed. Please try again.'
 }
 
+export const changePassword = async (uid, currentPassword, newPassword) => {
+  if (!uid) {
+    throw new Error('No authenticated user found.')
+  }
+
+  if (String(newPassword || '').length < 6) {
+    const error = new Error('New password must be at least 6 characters long.')
+    error.code = 'auth/weak-password'
+    throw error
+  }
+
+  const userRef = ref(db, `users/${uid}`)
+  const userSnapshot = await get(userRef)
+
+  if (!userSnapshot.exists()) {
+    throw new Error('User account could not be found.')
+  }
+
+  const user = userSnapshot.val()
+  
+  // Use the same password verification as signIn
+  const { passwordHash, passwordSalt } = await resolvePasswordRecord(uid, user, currentPassword)
+  const candidateHash = await hashPassword(currentPassword, passwordSalt)
+  
+  if (candidateHash !== passwordHash) {
+    const error = new Error('Current password is incorrect.')
+    error.code = 'auth/invalid-password'
+    throw error
+  }
+
+  // Hash the new password with a new salt
+  const newPasswordSalt = createSalt()
+  const newPasswordHash = await hashPassword(newPassword, newPasswordSalt)
+
+  await update(userRef, {
+    passwordSalt: newPasswordSalt,
+    passwordHash: newPasswordHash,
+    updatedAt: new Date().toISOString()
+  })
+
+  return true
+}
+
 export const syncExpiredPendingBookings = async (bookings = []) => {
   const updates = {}
 
