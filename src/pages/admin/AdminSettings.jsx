@@ -20,9 +20,7 @@ const AdminSettings = () => {
     checkOutTime: CHECK_OUT_TIME,
     seniorDiscountPercent: 0,
     childDiscountPercent: 0,
-    maintenanceMode: false,
-    emailNotifications: true,
-    smsNotifications: true
+    pwdDiscountPercent: 0
   })
 
   useEffect(() => {
@@ -35,7 +33,8 @@ const AdminSettings = () => {
             ...prev,
             ...snapshot.val(),
             seniorDiscountPercent: Number(snapshot.val().seniorDiscountPercent || 0),
-            childDiscountPercent: Number(snapshot.val().childDiscountPercent || 0)
+            childDiscountPercent: Number(snapshot.val().childDiscountPercent || 0),
+            pwdDiscountPercent: Number(snapshot.val().pwdDiscountPercent || 0)
           }))
         }
 
@@ -61,8 +60,9 @@ const AdminSettings = () => {
   const handleSave = async () => {
     const seniorDiscountPercent = Number(settings.seniorDiscountPercent || 0)
     const childDiscountPercent = Number(settings.childDiscountPercent || 0)
+    const pwdDiscountPercent = Number(settings.pwdDiscountPercent || 0)
 
-    if (seniorDiscountPercent < 0 || seniorDiscountPercent > 100 || childDiscountPercent < 0 || childDiscountPercent > 100) {
+    if (seniorDiscountPercent < 0 || seniorDiscountPercent > 100 || childDiscountPercent < 0 || childDiscountPercent > 100 || pwdDiscountPercent < 0 || pwdDiscountPercent > 100) {
       alert('Discount percentages must be between 0 and 100.')
       return
     }
@@ -74,6 +74,7 @@ const AdminSettings = () => {
         ...settings,
         seniorDiscountPercent,
         childDiscountPercent,
+        pwdDiscountPercent,
         updatedAt: new Date().toISOString()
       })
 
@@ -81,6 +82,60 @@ const AdminSettings = () => {
     } catch (error) {
       console.error('Failed to save settings:', error)
       alert('Failed to save settings. Please try again.')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleClearBookings = async () => {
+    const confirm = window.confirm(
+      'WARNING: This will delete ALL bookings/reservations. Rooms will NOT be deleted.\n\nAre you absolutely sure? This action cannot be undone.'
+    )
+
+    if (!confirm) return
+
+    setIsSaving(true)
+    try {
+      const bookingsRef = ref(db, 'bookings')
+      await set(bookingsRef, null)
+      alert('All bookings have been cleared successfully!')
+    } catch (error) {
+      console.error('Failed to clear bookings:', error)
+      alert('Failed to clear bookings. Please try again.')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleResetSystem = async () => {
+    const confirm = window.confirm(
+      'WARNING: This will reset all settings to default values.\n\nAre you absolutely sure? This action cannot be undone.'
+    )
+
+    if (!confirm) return
+
+    setIsSaving(true)
+    try {
+      const defaultSettings = {
+        siteName: 'Sablayan Adventure Camp',
+        siteEmail: 'sablayanadventurecamp@gmail.com',
+        phone: '+63 912 345 6789',
+        address: 'Poblacion, Sablayan, Occidental Mindoro, Philippines',
+        timezone: BOOKING_TIMEZONE,
+        currency: 'PHP',
+        checkInTime: CHECK_IN_TIME,
+        checkOutTime: CHECK_OUT_TIME,
+        seniorDiscountPercent: 0,
+        childDiscountPercent: 0,
+        pwdDiscountPercent: 0
+      }
+
+      await set(ref(db, 'settings/general'), defaultSettings)
+      setSettings(defaultSettings)
+      alert('System settings have been reset to default values!')
+    } catch (error) {
+      console.error('Failed to reset system:', error)
+      alert('Failed to reset settings. Please try again.')
     } finally {
       setIsSaving(false)
     }
@@ -211,10 +266,21 @@ const AdminSettings = () => {
                   max="100"
                 />
               </div>
+              <div className="form-group">
+                <label>PWD Discount (%)</label>
+                <input
+                  type="number"
+                  name="pwdDiscountPercent"
+                  value={settings.pwdDiscountPercent}
+                  onChange={handleChange}
+                  min="0"
+                  max="100"
+                />
+              </div>
               <div className="form-group full-width">
                 <label>Discount Notes</label>
                 <textarea
-                  value={`Matanda: ${settings.seniorDiscountPercent}% off | Bata: ${settings.childDiscountPercent}% off\nSet 0 if you do not want to apply a discount.`}
+                  value={`Matanda: ${settings.seniorDiscountPercent}% off | Bata: ${settings.childDiscountPercent}% off | PWD: ${settings.pwdDiscountPercent}% off\nSet 0 if you do not want to apply a discount.`}
                   readOnly
                   rows={2}
                 ></textarea>
@@ -222,57 +288,7 @@ const AdminSettings = () => {
             </div>
           </div>
 
-          {/* System Settings */}
-          <div className="settings-section">
-            <h4><i className="fas fa-cog"></i> System Settings</h4>
-            <div className="settings-grid">
-              <div className="form-group">
-                <label className="toggle-label">
-                  <span>Maintenance Mode</span>
-                  <span className="toggle-desc">Put the site in maintenance mode</span>
-                </label>
-                <label className="toggle-switch">
-                  <input 
-                    type="checkbox" 
-                    name="maintenanceMode"
-                    checked={settings.maintenanceMode}
-                    onChange={handleChange}
-                  />
-                  <span className="slider"></span>
-                </label>
-              </div>
-              <div className="form-group">
-                <label className="toggle-label">
-                  <span>Email Notifications</span>
-                  <span className="toggle-desc">Receive email notifications for bookings</span>
-                </label>
-                <label className="toggle-switch">
-                  <input 
-                    type="checkbox" 
-                    name="emailNotifications"
-                    checked={settings.emailNotifications}
-                    onChange={handleChange}
-                  />
-                  <span className="slider"></span>
-                </label>
-              </div>
-              <div className="form-group">
-                <label className="toggle-label">
-                  <span>SMS Notifications</span>
-                  <span className="toggle-desc">Receive SMS notifications for bookings</span>
-                </label>
-                <label className="toggle-switch">
-                  <input 
-                    type="checkbox" 
-                    name="smsNotifications"
-                    checked={settings.smsNotifications}
-                    onChange={handleChange}
-                  />
-                  <span className="slider"></span>
-                </label>
-              </div>
-            </div>
-          </div>
+
         </div>
       </div>
 
@@ -287,14 +303,18 @@ const AdminSettings = () => {
               <h5>Clear All Bookings</h5>
               <p>Remove all booking data from the system</p>
             </div>
-            <button className="danger-btn">Clear Data</button>
+            <button className="danger-btn" onClick={handleClearBookings} disabled={isSaving}>
+              {isSaving ? 'Clearing...' : 'Clear Data'}
+            </button>
           </div>
           <div className="danger-item">
             <div>
               <h5>Reset System</h5>
               <p>Reset all settings to default values</p>
             </div>
-            <button className="danger-btn">Reset</button>
+            <button className="danger-btn" onClick={handleResetSystem} disabled={isSaving}>
+              {isSaving ? 'Resetting...' : 'Reset'}
+            </button>
           </div>
         </div>
       </div>

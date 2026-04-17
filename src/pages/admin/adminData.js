@@ -52,14 +52,6 @@ export const normalizeBookings = (data) => {
 export const getPaymentStatusMeta = (status = '') => {
   const normalizedStatus = String(status || 'pending').trim().toLowerCase()
 
-  if (normalizedStatus === 'paid') {
-    return {
-      label: 'paid',
-      tone: 'paid',
-      icon: 'fa-check-double'
-    }
-  }
-
   if (normalizedStatus === 'confirmed') {
     return {
       label: 'confirmed',
@@ -108,6 +100,15 @@ const buildGuestKey = (booking) => {
   return fullName ? `name:${fullName}` : ''
 }
 
+const isUserActive = (lastActive) => {
+  if (!lastActive) {
+    return false
+  }
+  const thirtyMinutesAgo = Date.now() - 30 * 60 * 1000
+  const lastActiveDate = new Date(lastActive).getTime()
+  return lastActiveDate > thirtyMinutesAgo
+}
+
 export const normalizeUsers = (usersData, bookings, authUser) => {
   const usersMap = new Map()
 
@@ -116,6 +117,8 @@ export const normalizeUsers = (usersData, bookings, authUser) => {
       const email = (user?.email || '').trim().toLowerCase()
       const name = user?.name || user?.displayName || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Unknown User'
       const key = email ? `email:${email}` : `id:${id}`
+      const lastActive = user?.lastActive || user?.lastLoginAt || null
+      const resolvedStatus = lastActive ? (isUserActive(lastActive) ? 'active' : 'inactive') : (user?.status || 'active')
 
       usersMap.set(key, {
         id,
@@ -123,7 +126,8 @@ export const normalizeUsers = (usersData, bookings, authUser) => {
         email: user?.email || 'N/A',
         phone: user?.phone || 'N/A',
         role: user?.role || 'customer',
-        status: user?.status || 'active',
+        status: resolvedStatus,
+        lastActive,
         joinedDate: user?.joinedDate || user?.createdAt || null,
         totalBookings: Number(user?.totalBookings || 0)
       })
@@ -164,13 +168,17 @@ export const normalizeUsers = (usersData, bookings, authUser) => {
   if (authUser?.email) {
     const key = `email:${authUser.email.trim().toLowerCase()}`
     const existing = usersMap.get(key)
+    const lastActive = existing?.lastActive || authUser.metadata?.lastSignInTime || null
+    // Admin is active if currently authenticated (logged in), otherwise check lastActive timestamp
+    const adminStatus = 'active'
     usersMap.set(key, {
       id: authUser.uid || existing?.id || key,
       name: authUser.displayName || existing?.name || 'Admin User',
       email: authUser.email,
       phone: existing?.phone || 'N/A',
       role: existing?.role || 'admin',
-      status: existing?.status || 'active',
+      status: adminStatus,
+      lastActive: lastActive,
       joinedDate: existing?.joinedDate || authUser.metadata?.creationTime || null,
       totalBookings: existing?.totalBookings || 0
     })
@@ -188,7 +196,7 @@ export const getOccupancyStats = (rooms, bookings) => {
 
   const occupiedRoomIds = new Set(
     bookings
-      .filter((booking) => ['confirmed', 'paid'].includes(booking.paymentStatus))
+      .filter((booking) => booking.paymentStatus === 'confirmed')
       .filter((booking) => getReservationPhase(booking, now) === 'active')
       .map((booking) => booking.roomId || booking.room?.id || booking.room?.title)
       .filter(Boolean)
@@ -271,7 +279,7 @@ export const getRevenueSeries = (bookings, days = 7) => {
     nextDate.setDate(date.getDate() + 1)
 
     const value = bookings
-      .filter((booking) => ['confirmed', 'paid'].includes(booking.paymentStatus))
+      .filter((booking) => booking.paymentStatus === 'confirmed')
       .filter((booking) => {
         const createdAt = new Date(booking.createdAt || booking.checkIn || 0)
         return createdAt >= date && createdAt < nextDate
@@ -297,9 +305,6 @@ export const getRecentActivity = (bookings, users) => {
     if (booking.paymentStatus === 'cancelled') {
       action = 'had a booking auto-cancelled for'
       status = 'cancelled'
-    } else if (booking.paymentStatus === 'paid') {
-      action = 'completed payment for'
-      status = 'paid'
     } else if (booking.paymentStatus === 'confirmed') {
       action = 'confirmed payment for'
       status = 'confirmed'

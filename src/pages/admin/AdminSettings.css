@@ -141,14 +141,15 @@
 
 /* Toggle Switch */
 .toggle-label {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+  display: block;
+  margin-bottom: 1rem;
 }
 
 .toggle-label span:first-child {
+  display: block;
   font-weight: 700;
   color: var(--admin-text-main);
+  margin-bottom: 0.5rem;
 }
 
 .toggle-desc {

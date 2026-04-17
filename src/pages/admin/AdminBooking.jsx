@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { onValue, ref, remove, update } from 'firebase/database'
 import { db, syncExpiredPendingBookings } from '../../firebase'
+import { sendNotificationByEmail } from '../../NotificationContext'
 import PageLoader from '../../components/PageLoader'
 import { formatCurrency, formatDate, getBookingOperationalStatus, getPaymentStatusMeta, normalizeBookings } from './adminData'
 import './AdminBooking.css'
@@ -45,6 +46,18 @@ const AdminBooking = () => {
         paymentStatus: 'confirmed',
         bookingStatus: 'confirmed'
       })
+
+      // Send notification to user
+      if (booking?.email) {
+        const bookingType = booking.type === 'room' ? 'Room Reservation' : 'Zipline Activity'
+        await sendNotificationByEmail(
+          booking.email,
+          'approval',
+          'Booking Approved!',
+          `Your ${bookingType} booking has been approved and confirmed.`,
+          { bookingId: id, status: 'confirmed' }
+        )
+      }
 
       // Send booking approval email
       if (booking && booking.email) {
@@ -96,6 +109,18 @@ const AdminBooking = () => {
         bookingStatus: 'pending'
       })
 
+      // Send notification to user
+      if (booking?.email) {
+        const bookingType = booking.type === 'room' ? 'Room Reservation' : 'Zipline Activity'
+        await sendNotificationByEmail(
+          booking.email,
+          'admin_action',
+          'Booking Status Updated',
+          `Your ${bookingType} booking status has been reverted to pending and requires re-approval.`,
+          { bookingId: id, status: 'pending' }
+        )
+      }
+
       // Send booking status update email (Reverted to Pending)
       if (booking && booking.email) {
         try {
@@ -138,7 +163,7 @@ const AdminBooking = () => {
     }
   }
 
-  const handleCancelBooking = async (id) => {
+  const handleCancelBooking = async (id, booking) => {
     if (!window.confirm('Are you sure you want to cancel this booking?')) {
       return
     }
@@ -148,6 +173,19 @@ const AdminBooking = () => {
         paymentStatus: 'cancelled',
         bookingStatus: 'cancelled'
       })
+
+      // Send notification to user
+      if (booking?.email) {
+        const bookingType = booking.type === 'room' ? 'Room Reservation' : 'Zipline Activity'
+        await sendNotificationByEmail(
+          booking.email,
+          'cancel',
+          'Booking Cancelled',
+          `Your ${bookingType} booking has been cancelled.`,
+          { bookingId: id, status: 'cancelled' }
+        )
+      }
+
       alert('Booking cancelled successfully!')
     } catch (error) {
       console.error('Error cancelling booking:', error)
@@ -165,6 +203,18 @@ const AdminBooking = () => {
         paymentStatus: 'declined',
         bookingStatus: 'declined'
       })
+
+      // Send notification to user
+      if (booking?.email) {
+        const bookingType = booking.type === 'room' ? 'Room Reservation' : 'Zipline Activity'
+        await sendNotificationByEmail(
+          booking.email,
+          'cancel',
+          'Booking Declined',
+          `Your ${bookingType} booking has been declined. Please contact support for more information.`,
+          { bookingId: id, status: 'declined' }
+        )
+      }
 
       // Send booking status update email (Declined)
       if (booking && booking.email) {
@@ -208,12 +258,24 @@ const AdminBooking = () => {
     }
   }
 
-  const handleDeleteBooking = async (id) => {
+  const handleDeleteBooking = async (id, booking) => {
     if (!window.confirm('Are you sure you want to delete this booking?')) {
       return
     }
 
     try {
+      // Send notification to user before deleting
+      if (booking?.email) {
+        const bookingType = booking.type === 'room' ? 'Room Reservation' : 'Zipline Activity'
+        await sendNotificationByEmail(
+          booking.email,
+          'cancel',
+          'Booking Deleted',
+          `Your ${bookingType} booking has been deleted.`,
+          { bookingId: id, status: 'deleted' }
+        )
+      }
+
       await remove(ref(db, `bookings/${id}`))
       alert('Booking deleted successfully!')
     } catch (error) {
@@ -229,7 +291,7 @@ const AdminBooking = () => {
     pending: bookings.filter((booking) => booking.paymentStatus === 'pending').length,
     confirmed: bookings.filter((booking) => booking.paymentStatus === 'confirmed').length,
     cancelled: bookings.filter((booking) => booking.paymentStatus === 'cancelled').length,
-    activeStays: bookings.filter((booking) => ['confirmed', 'paid'].includes(booking.paymentStatus) && getBookingOperationalStatus(booking).phase === 'active').length,
+    activeStays: bookings.filter((booking) => booking.paymentStatus === 'confirmed' && getBookingOperationalStatus(booking).phase === 'active').length,
     revenue: bookings.reduce((sum, booking) => sum + Number(booking.depositAmount || 0), 0)
   }
 
@@ -357,7 +419,6 @@ const AdminBooking = () => {
                     <option value="all">All Status</option>
                     <option value="pending">Pending</option>
                     <option value="confirmed">Confirmed</option>
-                    <option value="paid">Paid</option>
                     <option value="cancelled">Cancelled</option>
                   </select>
                 </div>
@@ -473,7 +534,7 @@ const AdminBooking = () => {
                           )}
                           <button
                             className="delete-btn"
-                            onClick={() => handleDeleteBooking(booking.id)}
+                            onClick={() => handleDeleteBooking(booking.id, booking)}
                             title="Delete Booking"
                           >
                             <i className="fas fa-trash-alt"></i>
@@ -490,97 +551,207 @@ const AdminBooking = () => {
       )}
 
       {selectedBooking && (
-        <div className="booking-modal-overlay" onClick={() => setSelectedBooking(null)}>
-          <div className="booking-modal-content" onClick={(event) => event.stopPropagation()}>
-            <div className="booking-modal-header">
-              <h3>Booking Details</h3>
-              <button className="modal-close-btn" onClick={() => setSelectedBooking(null)}>
+        <div className="modal-overlay active" onClick={() => setSelectedBooking(null)}>
+          <div className="modal-content booking-details-modal animate-in" onClick={(event) => event.stopPropagation()}>
+            <div className="modal-header-premium">
+              <div className="modal-header-bg"></div>
+              <div className="header-content">
+                <div className="user-avatar-premium">
+                  <i className={`fas fa-${selectedBooking.type === 'zipline' ? 'wind' : 'bed'}`}></i>
+                </div>
+                <div className="header-text">
+                  <h3>Booking Details</h3>
+                  <span className="user-id-tag">REF: {selectedBooking.referenceNumber || 'N/A'}</span>
+                </div>
+              </div>
+              <button className="close-btn-premium" onClick={() => setSelectedBooking(null)}>
                 <i className="fas fa-times"></i>
               </button>
             </div>
-            <div className="booking-modal-body">
-              <div className="booking-detail-section">
-                <h4>Guest Information</h4>
-                <p><strong>Name:</strong> {`${selectedBooking.firstName || ''} ${selectedBooking.lastName || ''}`.trim() || 'Guest'}</p>
-                <p><strong>Email:</strong> {selectedBooking.email || 'N/A'}</p>
-                <p><strong>Phone:</strong> {selectedBooking.phone || 'N/A'}</p>
+            
+            <div className="modal-body-premium">
+              <div className="booking-premium-grid">
+                
+                {/* Left Column: Guest & Stay Info */}
+                <div className="booking-column">
+                  <div className="p-info-section">
+                    <div className="p-section-header">
+                      <i className="fas fa-user-circle"></i>
+                      <span>Guest Information</span>
+                    </div>
+                    <div className="p-detail-card">
+                      <div className="p-detail-item">
+                        <label>Full Name</label>
+                        <span className="p-detail-value">{`${selectedBooking.firstName || ''} ${selectedBooking.lastName || ''}`.trim() || 'Guest'}</span>
+                      </div>
+                      <div className="p-detail-item">
+                        <label>Email Address</label>
+                        <span className="p-detail-value">{selectedBooking.email || 'N/A'}</span>
+                      </div>
+                      <div className="p-detail-item">
+                        <label>Phone Number</label>
+                        <span className="p-detail-value">{selectedBooking.phone || 'N/A'}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-info-section">
+                    <div className="p-section-header">
+                      <i className="fas fa-calendar-check"></i>
+                      <span>Schedule & Status</span>
+                    </div>
+                    <div className="p-detail-card">
+                      {selectedBooking.type === 'zipline' ? (
+                        <div className="p-detail-item">
+                          <label>Activity Date</label>
+                          <span className="p-detail-value">{formatDate(selectedBooking.date, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                        </div>
+                      ) : (
+                        <div className="p-form-row">
+                          <div className="p-detail-item">
+                            <label>Check-in</label>
+                            <span className="p-detail-value">{formatDate(selectedBooking.checkIn, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                          </div>
+                          <div className="p-detail-item">
+                            <label>Check-out</label>
+                            <span className="p-detail-value">{formatDate(selectedBooking.checkOut, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                          </div>
+                        </div>
+                      )}
+                      <div className="p-detail-item">
+                        <label>Stay Operational Status</label>
+                        <span className={`p-badge status ${getBookingOperationalStatus(selectedBooking).tone}`}>
+                          {getBookingOperationalStatus(selectedBooking).label}
+                        </span>
+                        <p className="p-status-note">{getBookingOperationalStatus(selectedBooking).details}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Column: Property & Payment */}
+                <div className="booking-column">
+                  <div className="p-info-section">
+                    <div className="p-section-header">
+                      <i className="fas fa-tag"></i>
+                      <span>Reservation Details</span>
+                    </div>
+                    <div className="p-detail-card highlight">
+                      {selectedBooking.type === 'zipline' ? (
+                        <>
+                          <div className="p-detail-item">
+                            <label>Activity</label>
+                            <span className="p-detail-value">{selectedBooking.activity?.title || 'Zipline Adventure'}</span>
+                          </div>
+                          <div className="p-detail-item">
+                            <label>Experience Type</label>
+                            <span className="p-badge role customer">{selectedBooking.ziplineType === 'local' ? 'Sablayeño' : 'Tourist'} Rate</span>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="p-detail-item">
+                            <label>Accommodation</label>
+                            <span className="p-detail-value">{selectedBooking.room?.title || 'N/A'}</span>
+                            <small className="p-sub-value">{selectedBooking.room?.subtitle}</small>
+                          </div>
+                        </>
+                      )}
+                      <div className="p-form-row">
+                        <div className="p-detail-item">
+                          <label>Guests</label>
+                          <span className="p-detail-value">{selectedBooking.guests || 0} Total</span>
+                        </div>
+                        <div className="p-detail-item">
+                          <label>Payment</label>
+                          <span className={`p-badge status ${getPaymentStatusMeta(selectedBooking.paymentStatus).tone}`}>
+                            {getPaymentStatusMeta(selectedBooking.paymentStatus).label}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-info-section">
+                    <div className="p-section-header">
+                      <i className="fas fa-receipt"></i>
+                      <span>Financial Summary</span>
+                    </div>
+                    <div className="p-detail-card financial">
+                      <div className="p-financial-row">
+                        <span>Deposit Amount Paid</span>
+                        <strong className="p-amount">{formatCurrency(selectedBooking.depositAmount)}</strong>
+                      </div>
+                      {selectedBooking.type === 'zipline' && (
+                        <div className="p-financial-breakdown">
+                          <div className="p-breakdown-item">
+                            <span>Base Total</span>
+                            <span>{formatCurrency(selectedBooking.baseAmount)}</span>
+                          </div>
+                          <div className="p-breakdown-item discount">
+                            <span>Total Discounts</span>
+                            <span>-{formatCurrency(selectedBooking.discountAmount)}</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
-              {selectedBooking.type === 'zipline' ? (
-                <>
-                  <div className="booking-detail-section">
-                    <h4>Activity Details</h4>
-                    <p><strong>Activity:</strong> {selectedBooking.activity?.title || 'Zipline Adventure'}</p>
-                    <p><strong>Experience Type:</strong> {selectedBooking.ziplineType === 'local' ? 'Sablayeño Rate' : 'Tourist Rate'}</p>
-                    <p><strong>Price per person:</strong> {formatCurrency(selectedBooking.activity?.price)}</p>
-                    <p><strong>Description:</strong> {selectedBooking.activity?.description}</p>
-                  </div>
-                  <div className="booking-detail-section">
-                    <h4>Activity Date</h4>
-                    <p><strong>Date:</strong> {formatDate(selectedBooking.date, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                    <p><strong>Duration:</strong> 15-20 minutes</p>
-                    <p><strong>Activity status:</strong> <span className={`status ${getBookingOperationalStatus(selectedBooking).tone}`}>{getBookingOperationalStatus(selectedBooking).label}</span></p>
-                    <p><strong>Status detail:</strong> {getBookingOperationalStatus(selectedBooking).details}</p>
-                    <p><strong>Number of Participants:</strong> {selectedBooking.guests || 0}</p>
-                    <p><strong>Regular Guests:</strong> {selectedBooking.regularGuests || 0}</p>
-                    <p><strong>Matanda:</strong> {selectedBooking.seniorGuests || 0} ({selectedBooking.seniorDiscountPercent || 0}% off)</p>
-                    <p><strong>Bata:</strong> {selectedBooking.childGuests || 0} ({selectedBooking.childDiscountPercent || 0}% off)</p>
-                    <p><strong>Base Amount:</strong> {formatCurrency(selectedBooking.baseAmount)}</p>
-                    <p><strong>Total Discount:</strong> {formatCurrency(selectedBooking.discountAmount)}</p>
-                    <p><strong>Final Amount:</strong> {formatCurrency(selectedBooking.totalAmount)}</p>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="booking-detail-section">
-                    <h4>Room Details</h4>
-                    <p><strong>Room:</strong> {selectedBooking.room?.title || 'N/A'} {selectedBooking.room?.subtitle ? `(${selectedBooking.room.subtitle})` : ''}</p>
-                    <p><strong>Price per night:</strong> {formatCurrency(selectedBooking.room?.price)}</p>
-                  </div>
-                  <div className="booking-detail-section">
-                    <h4>Booking Dates</h4>
-                    <p><strong>Check-in:</strong> {formatDate(selectedBooking.checkIn, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                    <p><strong>Check-out:</strong> {formatDate(selectedBooking.checkOut, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                    <p><strong>Stay status:</strong> <span className={`status ${getBookingOperationalStatus(selectedBooking).tone}`}>{getBookingOperationalStatus(selectedBooking).label}</span></p>
-                    <p><strong>Status detail:</strong> {getBookingOperationalStatus(selectedBooking).details}</p>
-                    <p><strong>Number of Guests:</strong> {selectedBooking.guests || 0}</p>
-                  </div>
-                </>
-              )}
-              <div className="booking-detail-section">
-                <h4>Payment Information</h4>
-                <p><strong>Reference Number:</strong> {selectedBooking.referenceNumber || 'N/A'}</p>
-                <p><strong>Deposit Amount:</strong> {formatCurrency(selectedBooking.depositAmount)}</p>
-                <p><strong>Payment Status:</strong> <span className={`status ${getPaymentStatusMeta(selectedBooking.paymentStatus).tone}`}>{getPaymentStatusMeta(selectedBooking.paymentStatus).label}</span></p>
+
+              {/* Full Width Sections */}
+              <div className="booking-full-sections">
                 {selectedBooking.paymentReceiptUrl && (
-                  <p>
-                    <strong>Receipt:</strong>{' '}
-                    <a href={selectedBooking.paymentReceiptUrl} target="_blank" rel="noreferrer">
-                      View uploaded receipt
-                    </a>
-                  </p>
+                  <div className="p-info-section">
+                    <div className="p-section-header">
+                      <i className="fas fa-camera"></i>
+                      <span>Payment Verification</span>
+                    </div>
+                    <div className="p-receipt-preview-premium">
+                      <img src={selectedBooking.paymentReceiptUrl} alt="Receipt" />
+                      <div className="p-receipt-overlay">
+                        <a href={selectedBooking.paymentReceiptUrl} target="_blank" rel="noreferrer" className="p-btn-view-full">
+                          <i className="fas fa-expand-alt"></i>
+                          Open Full Image
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {selectedBooking.message && (
+                  <div className="p-info-section">
+                    <div className="p-section-header">
+                      <i className="fas fa-comment-alt"></i>
+                      <span>Special Requests</span>
+                    </div>
+                    <div className="p-message-box">
+                      {selectedBooking.message}
+                    </div>
+                  </div>
                 )}
               </div>
-              {selectedBooking.message && (
-                <div className="booking-detail-section">
-                  <h4>Special Requests/Message</h4>
-                  <p>{selectedBooking.message}</p>
-                </div>
-              )}
-              <div className="booking-modal-actions">
+            </div>
+            
+            <div className="modal-footer-premium">
+              <button className="p-btn-secondary" onClick={() => setSelectedBooking(null)}>
+                Close
+              </button>
+              <div className="footer-actions-group">
                 {selectedBooking.paymentStatus === 'pending' && (
                   <button
-                    className="confirm-btn-large"
+                    className="p-btn-primary"
                     onClick={() => {
                       handleConfirmBooking(selectedBooking.id, selectedBooking)
                       setSelectedBooking(null)
                     }}
                   >
-                    <i className="fas fa-check"></i> Confirm Payment
+                    <i className="fas fa-check-circle"></i> Confirm Booking
                   </button>
                 )}
                 {selectedBooking.paymentStatus === 'confirmed' && (
                   <button
-                    className="revert-btn-large"
+                    className="p-btn-secondary"
                     onClick={() => {
                       handleRevertBooking(selectedBooking.id, selectedBooking)
                       setSelectedBooking(null)
@@ -591,23 +762,23 @@ const AdminBooking = () => {
                 )}
                 {selectedBooking.paymentStatus !== 'cancelled' && (
                   <button
-                    className="decline-btn-large"
+                    className="p-btn-danger outline"
                     onClick={() => {
                       handleDeclineBooking(selectedBooking.id, selectedBooking)
                       setSelectedBooking(null)
                     }}
                   >
-                    <i className="fas fa-times"></i> Decline Booking
+                    <i className="fas fa-times-circle"></i> Decline
                   </button>
                 )}
                 <button
-                  className="delete-btn-large"
+                  className="p-btn-danger"
                   onClick={() => {
-                    handleDeleteBooking(selectedBooking.id)
+                    handleDeleteBooking(selectedBooking.id, selectedBooking)
                     setSelectedBooking(null)
                   }}
                 >
-                  <i className="fas fa-trash-alt"></i> Delete Booking
+                  <i className="fas fa-trash-alt"></i> Delete
                 </button>
               </div>
             </div>

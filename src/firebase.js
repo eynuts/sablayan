@@ -197,6 +197,27 @@ export const signInAdminWithEmailPassword = async (email, password) => {
   return session
 }
 
+export const verifyAdminPassword = async (email, password) => {
+  const match = await findUserByEmail(email)
+
+  if (!match) {
+    const error = new Error('User not found.')
+    error.code = 'auth/user-not-found'
+    throw error
+  }
+
+  const { uid, user } = match
+  const { passwordHash, passwordSalt } = await resolvePasswordRecord(uid, user, password)
+  const candidateHash = await hashPassword(password, passwordSalt)
+  if (candidateHash !== passwordHash) {
+    const error = new Error('Invalid password.')
+    error.code = 'auth/invalid-password'
+    throw error
+  }
+
+  return true
+}
+
 export const signUpWithEmailPassword = async (email, password, firstName, lastName) => {
   const normalizedEmail = String(email || '').trim().toLowerCase()
   const trimmedFirstName = String(firstName || '').trim()

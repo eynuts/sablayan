@@ -33,23 +33,29 @@ const calculateNights = (checkIn, checkOut) => {
   return Number.isFinite(diffDays) && diffDays > 0 ? diffDays : 0
 }
 
-const calculateZiplinePricing = ({
-  pricePerPerson,
+const calculateRoomPricing = ({
+  pricePerNight,
+  nights,
   totalGuests,
   seniorGuests,
   childGuests,
+  pwdGuests,
   seniorDiscountPercent,
-  childDiscountPercent
+  childDiscountPercent,
+  pwdDiscountPercent
 }) => {
-  const normalizedTotalGuests = clampNumber(totalGuests, 1, 10)
-  const normalizedSeniorGuests = clampNumber(seniorGuests, 0, normalizedTotalGuests)
-  const normalizedChildGuests = clampNumber(childGuests, 0, normalizedTotalGuests - normalizedSeniorGuests)
-  const regularGuests = Math.max(normalizedTotalGuests - (normalizedSeniorGuests + normalizedChildGuests), 0)
+  const normalizedTotalGuests = Math.max(Number(totalGuests || 0), 0)
+  const normalizedSeniorGuests = Math.max(Number(seniorGuests || 0), 0)
+  const normalizedChildGuests = Math.max(Number(childGuests || 0), 0)
+  const normalizedPwdGuests = Math.max(Number(pwdGuests || 0), 0)
+  const totalDiscountedGuests = normalizedSeniorGuests + normalizedChildGuests + normalizedPwdGuests
+  const regularGuests = Math.max(normalizedTotalGuests - totalDiscountedGuests, 0)
 
-  const baseAmount = Number(pricePerPerson || 0) * normalizedTotalGuests
-  const seniorDiscountAmount = Math.round(Number(pricePerPerson || 0) * normalizedSeniorGuests * (Number(seniorDiscountPercent || 0) / 100))
-  const childDiscountAmount = Math.round(Number(pricePerPerson || 0) * normalizedChildGuests * (Number(childDiscountPercent || 0) / 100))
-  const discountAmount = seniorDiscountAmount + childDiscountAmount
+  const baseAmount = Number(pricePerNight || 0) * (nights || 0) * normalizedTotalGuests
+  const seniorDiscountAmount = Math.round(Number(pricePerNight || 0) * normalizedSeniorGuests * (nights || 0) * (Number(seniorDiscountPercent || 0) / 100))
+  const childDiscountAmount = Math.round(Number(pricePerNight || 0) * normalizedChildGuests * (nights || 0) * (Number(childDiscountPercent || 0) / 100))
+  const pwdDiscountAmount = Math.round(Number(pricePerNight || 0) * normalizedPwdGuests * (nights || 0) * (Number(pwdDiscountPercent || 0) / 100))
+  const discountAmount = seniorDiscountAmount + childDiscountAmount + pwdDiscountAmount
   const totalAmount = Math.max(baseAmount - discountAmount, 0)
   const depositAmount = Math.round(totalAmount * 0.5)
 
@@ -57,10 +63,52 @@ const calculateZiplinePricing = ({
     totalGuests: normalizedTotalGuests,
     seniorGuests: normalizedSeniorGuests,
     childGuests: normalizedChildGuests,
+    pwdGuests: normalizedPwdGuests,
     regularGuests,
     baseAmount,
     seniorDiscountAmount,
     childDiscountAmount,
+    pwdDiscountAmount,
+    discountAmount,
+    totalAmount,
+    depositAmount
+  }
+}
+
+const calculateZiplinePricing = ({
+  pricePerPerson,
+  totalGuests,
+  seniorGuests,
+  childGuests,
+  pwdGuests,
+  seniorDiscountPercent,
+  childDiscountPercent,
+  pwdDiscountPercent
+}) => {
+  const normalizedTotalGuests = clampNumber(totalGuests, 1, 10)
+  const normalizedSeniorGuests = clampNumber(seniorGuests, 0, normalizedTotalGuests)
+  const normalizedChildGuests = clampNumber(childGuests, 0, normalizedTotalGuests - normalizedSeniorGuests)
+  const normalizedPwdGuests = clampNumber(pwdGuests, 0, normalizedTotalGuests - normalizedSeniorGuests - normalizedChildGuests)
+  const regularGuests = Math.max(normalizedTotalGuests - (normalizedSeniorGuests + normalizedChildGuests + normalizedPwdGuests), 0)
+
+  const baseAmount = Number(pricePerPerson || 0) * normalizedTotalGuests
+  const seniorDiscountAmount = Math.round(Number(pricePerPerson || 0) * normalizedSeniorGuests * (Number(seniorDiscountPercent || 0) / 100))
+  const childDiscountAmount = Math.round(Number(pricePerPerson || 0) * normalizedChildGuests * (Number(childDiscountPercent || 0) / 100))
+  const pwdDiscountAmount = Math.round(Number(pricePerPerson || 0) * normalizedPwdGuests * (Number(pwdDiscountPercent || 0) / 100))
+  const discountAmount = seniorDiscountAmount + childDiscountAmount + pwdDiscountAmount
+  const totalAmount = Math.max(baseAmount - discountAmount, 0)
+  const depositAmount = Math.round(totalAmount * 0.5)
+
+  return {
+    totalGuests: normalizedTotalGuests,
+    seniorGuests: normalizedSeniorGuests,
+    childGuests: normalizedChildGuests,
+    pwdGuests: normalizedPwdGuests,
+    regularGuests,
+    baseAmount,
+    seniorDiscountAmount,
+    childDiscountAmount,
+    pwdDiscountAmount,
     discountAmount,
     totalAmount,
     depositAmount
@@ -85,7 +133,8 @@ const Booking = () => {
   })
   const [discountSettings, setDiscountSettings] = useState({
     seniorDiscountPercent: 0,
-    childDiscountPercent: 0
+    childDiscountPercent: 0,
+    pwdDiscountPercent: 0
   })
   const [roomsLoading, setRoomsLoading] = useState(true)
   const [bookingType, setBookingType] = useState(() => {
@@ -116,6 +165,7 @@ const Booking = () => {
     guests: 1,
     seniorGuests: 0,
     childGuests: 0,
+    pwdGuests: 0,
     message: ''
   })
 
@@ -182,7 +232,8 @@ const Booking = () => {
         if (!snapshot.exists()) {
           setDiscountSettings({
             seniorDiscountPercent: 0,
-            childDiscountPercent: 0
+            childDiscountPercent: 0,
+            pwdDiscountPercent: 0
           })
           return
         }
@@ -190,7 +241,8 @@ const Booking = () => {
         const data = snapshot.val()
         setDiscountSettings({
           seniorDiscountPercent: Number(data.seniorDiscountPercent || 0),
-          childDiscountPercent: Number(data.childDiscountPercent || 0)
+          childDiscountPercent: Number(data.childDiscountPercent || 0),
+          pwdDiscountPercent: Number(data.pwdDiscountPercent || 0)
         })
       },
       (error) => {
@@ -254,6 +306,31 @@ const Booking = () => {
   // Calculate number of nights for room bookings only.
   const nights = useMemo(() => calculateNights(formData.checkIn, formData.checkOut), [formData.checkIn, formData.checkOut])
 
+  // Calculate room pricing based on guest counts and discount rates.
+  const roomPricing = useMemo(() => (
+    calculateRoomPricing({
+      pricePerNight: currentPrice,
+      nights: nights,
+      totalGuests: formData.guests,
+      seniorGuests: formData.seniorGuests,
+      childGuests: formData.childGuests,
+      pwdGuests: formData.pwdGuests,
+      seniorDiscountPercent: discountSettings.seniorDiscountPercent,
+      childDiscountPercent: discountSettings.childDiscountPercent,
+      pwdDiscountPercent: discountSettings.pwdDiscountPercent
+    })
+  ), [
+    currentPrice,
+    nights,
+    formData.childGuests,
+    formData.guests,
+    formData.pwdGuests,
+    formData.seniorGuests,
+    discountSettings.childDiscountPercent,
+    discountSettings.pwdDiscountPercent,
+    discountSettings.seniorDiscountPercent
+  ])
+
   // Calculate zipline pricing based on guest counts and discount rates.
   const ziplinePricing = useMemo(() => (
     calculateZiplinePricing({
@@ -261,15 +338,19 @@ const Booking = () => {
       totalGuests: formData.guests,
       seniorGuests: formData.seniorGuests,
       childGuests: formData.childGuests,
+      pwdGuests: formData.pwdGuests,
       seniorDiscountPercent: discountSettings.seniorDiscountPercent,
-      childDiscountPercent: discountSettings.childDiscountPercent
+      childDiscountPercent: discountSettings.childDiscountPercent,
+      pwdDiscountPercent: discountSettings.pwdDiscountPercent
     })
   ), [
     currentPrice,
     formData.childGuests,
     formData.guests,
+    formData.pwdGuests,
     formData.seniorGuests,
     discountSettings.childDiscountPercent,
+    discountSettings.pwdDiscountPercent,
     discountSettings.seniorDiscountPercent
   ])
 
@@ -319,12 +400,15 @@ const Booking = () => {
         const nextSeniorGuests = Math.min(Number(prev.seniorGuests || 0), nextGuests)
         const remainingGuests = Math.max(nextGuests - nextSeniorGuests, 0)
         const nextChildGuests = Math.min(Number(prev.childGuests || 0), remainingGuests)
+        const remainingAfterChild = Math.max(remainingGuests - nextChildGuests, 0)
+        const nextPwdGuests = Math.min(Number(prev.pwdGuests || 0), remainingAfterChild)
 
         return {
           ...prev,
           guests: value,
           seniorGuests: nextSeniorGuests,
-          childGuests: nextChildGuests
+          childGuests: nextChildGuests,
+          pwdGuests: nextPwdGuests
         }
       }
 
@@ -332,19 +416,34 @@ const Booking = () => {
         const nextSeniorGuests = Math.min(Number(value || 0), Number(prev.guests || 0))
         const remainingGuests = Math.max(Number(prev.guests || 0) - nextSeniorGuests, 0)
         const nextChildGuests = Math.min(Number(prev.childGuests || 0), remainingGuests)
+        const remainingAfterChild = Math.max(remainingGuests - nextChildGuests, 0)
+        const nextPwdGuests = Math.min(Number(prev.pwdGuests || 0), remainingAfterChild)
 
         return {
           ...prev,
           seniorGuests: nextSeniorGuests,
-          childGuests: nextChildGuests
+          childGuests: nextChildGuests,
+          pwdGuests: nextPwdGuests
         }
       }
 
       if (name === 'childGuests') {
         const maxChildGuests = Math.max(Number(prev.guests || 0) - Number(prev.seniorGuests || 0), 0)
+        const nextChildGuests = Math.min(Number(value || 0), maxChildGuests)
+        const remainingAfterChild = Math.max(maxChildGuests - nextChildGuests, 0)
+        const nextPwdGuests = Math.min(Number(prev.pwdGuests || 0), remainingAfterChild)
         return {
           ...prev,
-          childGuests: Math.min(Number(value || 0), maxChildGuests)
+          childGuests: nextChildGuests,
+          pwdGuests: nextPwdGuests
+        }
+      }
+
+      if (name === 'pwdGuests') {
+        const maxPwdGuests = Math.max(Number(prev.guests || 0) - Number(prev.seniorGuests || 0) - Number(prev.childGuests || 0), 0)
+        return {
+          ...prev,
+          pwdGuests: Math.min(Number(value || 0), maxPwdGuests)
         }
       }
 
@@ -409,11 +508,25 @@ const Booking = () => {
         phone: formData.phone,
         checkIn: formData.checkIn,
         checkOut: formData.checkOut,
-        guests: formData.guests,
+        guests: roomPricing.totalGuests,
+        seniorGuests: roomPricing.seniorGuests,
+        childGuests: roomPricing.childGuests,
+        pwdGuests: roomPricing.pwdGuests,
+        regularGuests: roomPricing.regularGuests,
         message: formData.message,
         room: currentRoom,
         roomId: currentRoom.id,
-        depositAmount: Math.round(currentRoom.price * 0.5)
+        nights: nights,
+        baseAmount: roomPricing.baseAmount,
+        discountAmount: roomPricing.discountAmount,
+        seniorDiscountAmount: roomPricing.seniorDiscountAmount,
+        childDiscountAmount: roomPricing.childDiscountAmount,
+        pwdDiscountAmount: roomPricing.pwdDiscountAmount,
+        totalAmount: roomPricing.totalAmount,
+        seniorDiscountPercent: discountSettings.seniorDiscountPercent,
+        childDiscountPercent: discountSettings.childDiscountPercent,
+        pwdDiscountPercent: discountSettings.pwdDiscountPercent,
+        depositAmount: roomPricing.depositAmount
       }
 
       navigate('/payment', { state: { bookingData } })
@@ -434,6 +547,7 @@ const Booking = () => {
         guests: ziplinePricing.totalGuests,
         seniorGuests: ziplinePricing.seniorGuests,
         childGuests: ziplinePricing.childGuests,
+        pwdGuests: ziplinePricing.pwdGuests,
         regularGuests: ziplinePricing.regularGuests,
         ziplineType: ziplineType,
         message: formData.message,
@@ -447,8 +561,10 @@ const Booking = () => {
         totalAmount: ziplinePricing.totalAmount,
         seniorDiscountPercent: discountSettings.seniorDiscountPercent,
         childDiscountPercent: discountSettings.childDiscountPercent,
+        pwdDiscountPercent: discountSettings.pwdDiscountPercent,
         seniorDiscountAmount: ziplinePricing.seniorDiscountAmount,
         childDiscountAmount: ziplinePricing.childDiscountAmount,
+        pwdDiscountAmount: ziplinePricing.pwdDiscountAmount,
         depositAmount: ziplinePricing.depositAmount
       }
 
@@ -463,36 +579,54 @@ const Booking = () => {
       if (field === 'guests') {
         const nextGuests = clampNumber(Number(prev.guests || 0) + delta, 1, 10)
         const nextSeniorGuests = Math.min(Number(prev.seniorGuests || 0), nextGuests)
-        const remainingGuests = Math.max(nextGuests - nextSeniorGuests, 0)
-        const nextChildGuests = Math.min(Number(prev.childGuests || 0), remainingGuests)
+        const remainingAfterSenior = Math.max(nextGuests - nextSeniorGuests, 0)
+        const nextChildGuests = Math.min(Number(prev.childGuests || 0), remainingAfterSenior)
+        const remainingAfterChild = Math.max(remainingAfterSenior - nextChildGuests, 0)
+        const nextPwdGuests = Math.min(Number(prev.pwdGuests || 0), remainingAfterChild)
 
         return {
           ...prev,
           guests: nextGuests,
           seniorGuests: nextSeniorGuests,
-          childGuests: nextChildGuests
+          childGuests: nextChildGuests,
+          pwdGuests: nextPwdGuests
         }
       }
 
       if (field === 'seniorGuests') {
         const maxSeniorGuests = Number(prev.guests || 0)
         const nextSeniorGuests = clampNumber(Number(prev.seniorGuests || 0) + delta, 0, maxSeniorGuests)
-        const remainingGuests = Math.max(Number(prev.guests || 0) - nextSeniorGuests, 0)
-        const nextChildGuests = Math.min(Number(prev.childGuests || 0), remainingGuests)
+        const remainingAfterSenior = Math.max(Number(prev.guests || 0) - nextSeniorGuests, 0)
+        const nextChildGuests = Math.min(Number(prev.childGuests || 0), remainingAfterSenior)
+        const remainingAfterChild = Math.max(remainingAfterSenior - nextChildGuests, 0)
+        const nextPwdGuests = Math.min(Number(prev.pwdGuests || 0), remainingAfterChild)
 
         return {
           ...prev,
           seniorGuests: nextSeniorGuests,
-          childGuests: nextChildGuests
+          childGuests: nextChildGuests,
+          pwdGuests: nextPwdGuests
         }
       }
 
       if (field === 'childGuests') {
         const maxChildGuests = Math.max(Number(prev.guests || 0) - Number(prev.seniorGuests || 0), 0)
         const nextChildGuests = clampNumber(Number(prev.childGuests || 0) + delta, 0, maxChildGuests)
+        const remainingAfterChild = Math.max(maxChildGuests - nextChildGuests, 0)
+        const nextPwdGuests = Math.min(Number(prev.pwdGuests || 0), remainingAfterChild)
         return {
           ...prev,
-          childGuests: nextChildGuests
+          childGuests: nextChildGuests,
+          pwdGuests: nextPwdGuests
+        }
+      }
+
+      if (field === 'pwdGuests') {
+        const maxPwdGuests = Math.max(Number(prev.guests || 0) - Number(prev.seniorGuests || 0) - Number(prev.childGuests || 0), 0)
+        const nextPwdGuests = clampNumber(Number(prev.pwdGuests || 0) + delta, 0, maxPwdGuests)
+        return {
+          ...prev,
+          pwdGuests: nextPwdGuests
         }
       }
 
@@ -601,7 +735,7 @@ const Booking = () => {
                         <i className="fas fa-minus"></i>
                       </button>
                       <div className="guest-value" aria-live="polite">
-                        <strong>{ziplinePricing.totalGuests}</strong>
+                        <strong>{formData.guests}</strong>
                         <span>Total</span>
                       </div>
                       <button type="button" className="guest-btn" onClick={() => updateGuestCount('guests', 1)} aria-label="Increase guests">
@@ -612,7 +746,7 @@ const Booking = () => {
                   </div>
                 </div>
 
-                {bookingType === 'zipline' && (
+                {(bookingType === 'room' || bookingType === 'zipline') && (
                   <div className="form-row">
                     <div className="form-group">
                       <label>Matanda</label>
@@ -621,7 +755,7 @@ const Booking = () => {
                           <i className="fas fa-minus"></i>
                         </button>
                         <div className="guest-value" aria-live="polite">
-                          <strong>{ziplinePricing.seniorGuests}</strong>
+                          <strong>{bookingType === 'zipline' ? ziplinePricing.seniorGuests : roomPricing.seniorGuests}</strong>
                           <span>{discountSettings.seniorDiscountPercent}% off</span>
                         </div>
                         <button type="button" className="guest-btn" onClick={() => updateGuestCount('seniorGuests', 1)} aria-label="Increase matanda">
@@ -636,26 +770,42 @@ const Booking = () => {
                           <i className="fas fa-minus"></i>
                         </button>
                         <div className="guest-value" aria-live="polite">
-                          <strong>{ziplinePricing.childGuests}</strong>
+                          <strong>{bookingType === 'zipline' ? ziplinePricing.childGuests : roomPricing.childGuests}</strong>
                           <span>{discountSettings.childDiscountPercent}% off</span>
                         </div>
                         <button type="button" className="guest-btn" onClick={() => updateGuestCount('childGuests', 1)} aria-label="Increase bata">
                           <i className="fas fa-plus"></i>
                         </button>
                       </div>
+                    </div>
+                    <div className="form-group">
+                      <label>PWD</label>
+                      <div className="guest-picker compact">
+                        <button type="button" className="guest-btn" onClick={() => updateGuestCount('pwdGuests', -1)} aria-label="Decrease pwd">
+                          <i className="fas fa-minus"></i>
+                        </button>
+                        <div className="guest-value" aria-live="polite">
+                          <strong>{bookingType === 'zipline' ? ziplinePricing.pwdGuests : roomPricing.pwdGuests}</strong>
+                          <span>{discountSettings.pwdDiscountPercent}% off</span>
+                        </div>
+                        <button type="button" className="guest-btn" onClick={() => updateGuestCount('pwdGuests', 1)} aria-label="Increase pwd">
+                          <i className="fas fa-plus"></i>
+                        </button>
+                      </div>
                       <div className="guest-hint subtle">
-                        Regular: <strong>{ziplinePricing.regularGuests}</strong>
+                        Regular: <strong>{bookingType === 'zipline' ? ziplinePricing.regularGuests : roomPricing.regularGuests}</strong>
                       </div>
                     </div>
                   </div>
                 )}
 
-                {bookingType === 'zipline' && (
+                {(bookingType === 'room' || bookingType === 'zipline') && (
                   <div className="booking-auth-notice">
                     <i className="fas fa-tags"></i>
                     <p>
-                      Matanda discount: <strong>{discountSettings.seniorDiscountPercent}% off</strong> and
-                      bata discount: <strong>{discountSettings.childDiscountPercent}% off</strong>.
+                      Matanda discount: <strong>{discountSettings.seniorDiscountPercent}% off</strong>, 
+                      bata discount: <strong>{discountSettings.childDiscountPercent}% off</strong>, and
+                      PWD discount: <strong>{discountSettings.pwdDiscountPercent}% off</strong>.
                     </p>
                   </div>
                 )}
@@ -718,7 +868,7 @@ const Booking = () => {
 
                 <button type="submit" className="submit-btn">
                   <i className="fas fa-credit-card"></i>
-                  Pay {bookingType === 'zipline' ? `₱${ziplinePricing.depositAmount.toLocaleString('en-PH')}` : ''}
+                  Pay {bookingType === 'zipline' ? `₱${ziplinePricing.depositAmount.toLocaleString('en-PH')}` : (bookingType === 'room' ? `₱${roomPricing.depositAmount.toLocaleString('en-PH')}` : '')}
                 </button>
               </form>
             </motion.div>
@@ -768,20 +918,47 @@ const Booking = () => {
 
                     <p className="room-display-description">{currentRoom.description}</p>
 
+                    <div className="room-display-capacity">
+                      <i className="fas fa-user-friends"></i>
+                      <span>{currentRoom.capacity}</span>
+                    </div>
+
+                    <div className="booking-policy-strip">
+                      <div className="booking-policy-item">
+                        <span className="booking-policy-label">Matanda</span>
+                        <strong>{discountSettings.seniorDiscountPercent}% off</strong>
+                      </div>
+                      <div className="booking-policy-item">
+                        <span className="booking-policy-label">Bata</span>
+                        <strong>{discountSettings.childDiscountPercent}% off</strong>
+                      </div>
+                      <div className="booking-policy-item">
+                        <span className="booking-policy-label">PWD</span>
+                        <strong>{discountSettings.pwdDiscountPercent}% off</strong>
+                      </div>
+                    </div>
+
                     <div className="pricing-breakdown">
                       <div className="pricing-row">
                         <span>Nights</span>
                         <strong>{nights || '—'}</strong>
                       </div>
                       <div className="pricing-row">
-                        <span>Deposit (50%)</span>
-                        <strong>₱{Math.round((currentRoom?.price || 0) * 0.5).toLocaleString('en-PH')}</strong>
+                        <span>Base</span>
+                        <strong>₱{roomPricing.baseAmount.toLocaleString('en-PH')}</strong>
                       </div>
-                    </div>
-
-                    <div className="room-display-capacity">
-                      <i className="fas fa-user-friends"></i>
-                      <span>{currentRoom.capacity}</span>
+                      <div className="pricing-row">
+                        <span>Discount</span>
+                        <strong className={roomPricing.discountAmount > 0 ? 'negative' : ''}>-₱{roomPricing.discountAmount.toLocaleString('en-PH')}</strong>
+                      </div>
+                      <div className="pricing-row total">
+                        <span>Total</span>
+                        <strong>₱{roomPricing.totalAmount.toLocaleString('en-PH')}</strong>
+                      </div>
+                      <div className="pricing-row deposit">
+                        <span>Deposit (50%)</span>
+                        <strong>₱{roomPricing.depositAmount.toLocaleString('en-PH')}</strong>
+                      </div>
                     </div>
                   </div>
                 )
@@ -811,6 +988,10 @@ const Booking = () => {
                     <div className="booking-policy-item">
                       <span className="booking-policy-label">Bata</span>
                       <strong>{discountSettings.childDiscountPercent}% off</strong>
+                    </div>
+                    <div className="booking-policy-item">
+                      <span className="booking-policy-label">PWD</span>
+                      <strong>{discountSettings.pwdDiscountPercent}% off</strong>
                     </div>
                   </div>
 

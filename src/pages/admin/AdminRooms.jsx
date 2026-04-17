@@ -347,309 +347,237 @@ const AdminRooms = () => {
       </div>}
 
       {showAddModal && (
-        <div className="admin-room-modal-overlay" onClick={() => {
+        <div className="modal-overlay active" onClick={() => {
           if (!isSaving) {
             setShowAddModal(false)
             resetForm()
           }
         }}>
-          <div className="admin-room-modal" onClick={(e) => e.stopPropagation()}>
-            <h4>
-              <i className="fas fa-plus-circle" style={{ color: 'var(--admin-primary)' }}></i>
-              {isEditMode ? 'Edit Room' : 'Add New Room'}
+          <div className="modal-content admin-room-modal animate-in" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header-premium minimal">
+              <div className="header-content">
+                <div className="user-avatar-premium">
+                  <i className={isEditMode ? "fas fa-edit" : "fas fa-plus"}></i>
+                </div>
+                <div className="header-text">
+                  <h3>{isEditMode ? 'Edit Accommodation' : 'New Accommodation'}</h3>
+                  <span className="user-id-tag">{isEditMode ? `Editing: ${newRoom.title}` : 'Creating a new property'}</span>
+                </div>
+              </div>
               <button 
-                type="button" 
-                className="modal-close-btn" 
+                className="close-btn-premium" 
                 onClick={() => {
                   if (!isSaving) {
                     setShowAddModal(false)
                     resetForm()
                   }
                 }}
-                style={{ 
-                  marginLeft: 'auto', 
-                  background: 'none', 
-                  border: 'none', 
-                  fontSize: '1.25rem', 
-                  color: '#94a3b8', 
-                  cursor: 'pointer',
-                  padding: '0.5rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  transition: 'color 0.2s ease'
-                }}
               >
                 <i className="fas fa-times"></i>
               </button>
-            </h4>
-            <div className="admin-room-modal-content">
-              <form id="add-room-form" onSubmit={handleAddRoom} className="admin-room-form">
+            </div>
+            
+            <div className="modal-body-premium">
+              <form id="add-room-form" onSubmit={handleAddRoom} className="premium-form-grid">
                 
                 {/* Image Section */}
-                <div className="form-section">
-                  <h5 className="form-section-title">
-                    <i className="fas fa-image"></i> Room Image
-                  </h5>
-                </div>
-
-                {imagePreview ? (
-                  <div className="image-preview-container">
-                    <div className="image-preview">
+                <div className="p-form-section">
+                  <div className="p-section-header">
+                    <i className="fas fa-image"></i>
+                    <span>Property Visuals</span>
+                  </div>
+                  
+                  {imagePreview ? (
+                    <div className="p-image-preview-wrapper">
                       <img src={imagePreview} alt="Preview" />
-                      <div className="image-preview-overlay">
-                        <button type="button" onClick={removeImage}>
-                          <i className="fas fa-trash-alt"></i> Remove Image
+                      <div className="p-image-overlay">
+                        <button type="button" onClick={removeImage} className="p-remove-img">
+                          <i className="fas fa-trash-alt"></i>
                         </button>
                       </div>
                     </div>
+                  ) : (
+                    <label htmlFor="room-image-file" className="p-file-upload-zone">
+                      <i className="fas fa-cloud-upload-alt"></i>
+                      <div className="p-upload-text">
+                        <span>Upload Property Image</span>
+                        <small>Drag and drop or click to browse</small>
+                      </div>
+                    </label>
+                  )}
+                  <input
+                    id="room-image-file"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="p-hidden-file"
+                    required={!isEditMode}
+                  />
+                </div>
+
+                {/* Info Sections */}
+                <div className="p-form-sections-grid">
+                  <div className="p-form-column">
+                    <div className="p-section-header">
+                      <i className="fas fa-info-circle"></i>
+                      <span>Details</span>
+                    </div>
+                    
+                    <div className="p-form-group">
+                      <label>Title</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. CAROLINA"
+                        value={newRoom.title}
+                        onChange={(e) => setNewRoom(prev => ({ ...prev, title: e.target.value }))}
+                        required
+                      />
+                    </div>
+
+                    <div className="p-form-group">
+                      <label>Subtitle / Type</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Fan Room"
+                        value={newRoom.subtitle}
+                        onChange={(e) => setNewRoom(prev => ({ ...prev, subtitle: e.target.value }))}
+                      />
+                    </div>
+
+                    <div className="p-form-row">
+                      <div className="p-form-group">
+                        <label>Category</label>
+                        <div className="p-select-wrapper">
+                          <select
+                            value={newRoom.category}
+                            onChange={(e) => setNewRoom(prev => ({ ...prev, category: e.target.value }))}
+                          >
+                            <option value="room">Room</option>
+                            <option value="duplex">Duplex</option>
+                            <option value="house">House</option>
+                          </select>
+                          <i className="fas fa-chevron-down"></i>
+                        </div>
+                      </div>
+                      <div className="p-form-group">
+                        <label>Status</label>
+                        <div className="p-select-wrapper">
+                          <select
+                            value={newRoom.status}
+                            onChange={(e) => setNewRoom(prev => ({ ...prev, status: e.target.value }))}
+                          >
+                            <option value="available">Available</option>
+                            <option value="maintenance">Maintenance</option>
+                          </select>
+                          <i className="fas fa-chevron-down"></i>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                ) : (
-                  <label htmlFor="room-image-file" className="file-input-label">
-                    <i className="fas fa-cloud-upload-alt"></i>
-                    <span>Click to upload or drag and drop</span>
-                    <small>PNG, JPG, GIF up to 10MB</small>
-                  </label>
-                )}
 
-                <input
-                  id="room-image-file"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="file-input"
-                  required={!isEditMode}
-                />
+                  <div className="p-form-column">
+                    <div className="p-section-header">
+                      <i className="fas fa-tags"></i>
+                      <span>Pricing & Specs</span>
+                    </div>
 
-                {/* Basic Information */}
-                <div className="form-section">
-                  <h5 className="form-section-title">
-                    <i className="fas fa-info-circle"></i> Basic Information
-                  </h5>
+                    <div className="p-form-group">
+                      <label>Price Per Night</label>
+                      <div className="p-input-with-prefix">
+                        <span className="p-prefix">₱</span>
+                        <input
+                          type="number"
+                          placeholder="0.00"
+                          value={newRoom.price}
+                          onChange={(e) => setNewRoom(prev => ({ ...prev, price: e.target.value }))}
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="p-form-row">
+                      <div className="p-form-group">
+                        <label>Size (m²)</label>
+                        <input
+                          type="number"
+                          placeholder="e.g. 25"
+                          value={newRoom.size}
+                          onChange={(e) => setNewRoom(prev => ({ ...prev, size: e.target.value }))}
+                        />
+                      </div>
+                      <div className="p-form-group">
+                        <label>Capacity</label>
+                        <input
+                          type="number"
+                          value={newRoom.capacity}
+                          onChange={(e) => setNewRoom(prev => ({ ...prev, capacity: parseInt(e.target.value) || 1 }))}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="p-form-group">
+                      <label>Total Inventory</label>
+                      <input
+                        type="number"
+                        value={newRoom.quantity}
+                        onChange={(e) => setNewRoom(prev => ({ ...prev, quantity: parseInt(e.target.value) || 1 }))}
+                      />
+                    </div>
+                  </div>
                 </div>
 
-                <div className="form-group required">
-                  <label htmlFor="title">Room Title</label>
-                  <input
-                    id="title"
-                    type="text"
-                    placeholder="e.g., CAROLINA"
-                    value={newRoom.title}
-                    onChange={(e) => setNewRoom(prev => ({ ...prev, title: e.target.value }))}
-                    required
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="subtitle">Subtitle</label>
-                  <input
-                    id="subtitle"
-                    type="text"
-                    placeholder="e.g., Fan Room"
-                    value={newRoom.subtitle}
-                    onChange={(e) => setNewRoom(prev => ({ ...prev, subtitle: e.target.value }))}
-                  />
-                </div>
-
-                <div className="form-group required">
-                  <label htmlFor="category">Category</label>
-                  <select
-                    id="category"
-                    value={newRoom.category}
-                    onChange={(e) => setNewRoom(prev => ({ ...prev, category: e.target.value }))}
-                  >
-                    <option value="room">Room</option>
-                    <option value="duplex">Duplex</option>
-                    <option value="house">House</option>
-                  </select>
-                </div>
-
-                <div className="form-group required">
-                  <label htmlFor="status">Status</label>
-                  <select
-                    id="status"
-                    value={newRoom.status}
-                    onChange={(e) => setNewRoom(prev => ({ ...prev, status: e.target.value }))}
-                  >
-                    <option value="available">Available</option>
-                    <option value="maintenance">Maintenance</option>
-                  </select>
-                </div>
-
-                <div className="form-group full required">
-                  <label htmlFor="description">Description</label>
+                <div className="p-form-group full">
+                  <label>Description</label>
                   <textarea
-                    id="description"
-                    placeholder="Describe the room in detail..."
+                    placeholder="Describe the property..."
                     value={newRoom.description}
                     onChange={(e) => setNewRoom(prev => ({ ...prev, description: e.target.value }))}
                     required
                   />
                 </div>
 
-                {/* Room Specifications */}
-                <div className="form-section">
-                  <h5 className="form-section-title">
-                    <i className="fas fa-ruler-combined"></i> Room Specifications
-                  </h5>
-                </div>
-
-                <div className="form-group required">
-                  <label htmlFor="price">Price Per Night</label>
-                  <div className="price-input-wrapper">
-                    <span className="peso-sign">₱</span>
+                <div className="p-form-group full">
+                  <label>Amenities & Features</label>
+                  <div className="p-tag-input-wrapper">
                     <input
-                      id="price"
-                      type="number"
-                      placeholder="e.g., 2500"
-                      value={newRoom.price}
-                      onChange={(e) => setNewRoom(prev => ({ ...prev, price: e.target.value }))}
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="size">Room Size (m²)</label>
-                  <input
-                    id="size"
-                    type="number"
-                    placeholder="e.g., 25"
-                    value={newRoom.size}
-                    onChange={(e) => setNewRoom(prev => ({ ...prev, size: e.target.value }))}
-                    step="0.5"
-                    min="0"
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="capacity">Number of Guests</label>
-                  <div className="number-stepper">
-                    <button
-                      type="button"
-                      className="stepper-btn decrease"
-                      onClick={() => setNewRoom(prev => ({ ...prev, capacity: Math.max(1, prev.capacity - 1) }))}
-                      disabled={newRoom.capacity <= 1}
-                    >
-                      <i className="fas fa-minus"></i>
-                    </button>
-                    <input
-                      id="capacity"
                       type="text"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      value={newRoom.capacity}
-                      onChange={(e) => {
-                        const val = Math.max(1, Math.min(20, parseInt(e.target.value.replace(/\D/g, '')) || 1))
-                        setNewRoom(prev => ({ ...prev, capacity: val }))
-                      }}
-                      className="stepper-input"
+                      placeholder="Type and press Enter to add..."
+                      value={featureInput}
+                      onChange={(e) => setFeatureInput(e.target.value)}
+                      onKeyPress={handleFeatureKeyPress}
                     />
-                    <button
-                      type="button"
-                      className="stepper-btn increase"
-                      onClick={() => setNewRoom(prev => ({ ...prev, capacity: Math.min(20, prev.capacity + 1) }))}
-                      disabled={newRoom.capacity >= 20}
-                    >
+                    <button type="button" onClick={addFeature} className="p-add-tag-btn">
                       <i className="fas fa-plus"></i>
                     </button>
                   </div>
+                  <div className="p-tags-container">
+                    {newRoom.features.map((feature, index) => (
+                      <span key={index} className="p-tag">
+                        {feature}
+                        <i className="fas fa-times" onClick={() => removeFeature(index)}></i>
+                      </span>
+                    ))}
+                  </div>
                 </div>
 
-                <div className="form-group">
-                  <label htmlFor="quantity">Quantity (Number of Rooms)</label>
-                  <div className="number-stepper">
-                    <button
-                      type="button"
-                      className="stepper-btn decrease"
-                      onClick={() => setNewRoom(prev => ({ ...prev, quantity: Math.max(1, prev.quantity - 1) }))}
-                      disabled={newRoom.quantity <= 1}
-                    >
-                      <i className="fas fa-minus"></i>
-                    </button>
+                <div className="p-form-group">
+                  <label className="p-checkbox-label">
                     <input
-                      id="quantity"
-                      type="text"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      value={newRoom.quantity}
-                      onChange={(e) => {
-                        const val = Math.max(1, Math.min(100, parseInt(e.target.value.replace(/\D/g, '')) || 1))
-                        setNewRoom(prev => ({ ...prev, quantity: val }))
-                      }}
-                      className="stepper-input"
+                      type="checkbox"
+                      checked={newRoom.popular}
+                      onChange={(e) => setNewRoom(prev => ({ ...prev, popular: e.target.checked }))}
                     />
-                    <button
-                      type="button"
-                      className="stepper-btn increase"
-                      onClick={() => setNewRoom(prev => ({ ...prev, quantity: Math.min(100, prev.quantity + 1) }))}
-                      disabled={newRoom.quantity >= 100}
-                    >
-                      <i className="fas fa-plus"></i>
-                    </button>
-                  </div>
+                    <span className="p-checkmark"></span>
+                    <span>Feature as Popular</span>
+                  </label>
                 </div>
-
-                <div className="form-group full">
-                  <label htmlFor="features">Features</label>
-                  <div className="features-input-group">
-                    <div className="features-input-wrapper">
-                      <input
-                        id="features"
-                        type="text"
-                        placeholder="Type a feature and press Enter (e.g., Air Conditioning)"
-                        value={featureInput}
-                        onChange={(e) => setFeatureInput(e.target.value)}
-                        onKeyPress={handleFeatureKeyPress}
-                      />
-                      <button
-                        type="button"
-                        className="add-feature-btn"
-                        onClick={addFeature}
-                        title="Add feature"
-                      >
-                        <i className="fas fa-plus"></i>
-                      </button>
-                    </div>
-                    {newRoom.features.length > 0 && (
-                      <div className="features-tags">
-                        {newRoom.features.map((feature, index) => (
-                          <span key={index} className="feature-tag-item">
-                            {feature}
-                            <button
-                              type="button"
-                              className="remove-feature-btn"
-                              onClick={() => removeFeature(index)}
-                              title="Remove feature"
-                            >
-                              <i className="fas fa-times"></i>
-                            </button>
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Additional Options */}
-                <label className="admin-room-checkbox">
-                  <input
-                    type="checkbox"
-                    checked={newRoom.popular}
-                    onChange={(e) => setNewRoom(prev => ({ ...prev, popular: e.target.checked }))}
-                  />
-                  <span>
-                    <i className="fas fa-star" style={{ color: 'var(--admin-primary)' }}></i>
-                    Mark as Popular
-                  </span>
-                </label>
               </form>
             </div>
-
-            {/* Form Actions Footer (Outside form but part of modal) */}
-            <div className="admin-room-form-actions">
+            
+            <div className="modal-footer-premium">
               <button 
                 type="button" 
+                className="p-btn-secondary" 
                 onClick={() => {
                   if (!isSaving) {
                     setShowAddModal(false)
@@ -658,42 +586,51 @@ const AdminRooms = () => {
                 }} 
                 disabled={isSaving}
               >
-                <i className="fas fa-times"></i> Cancel
+                Cancel
               </button>
               <button 
                 type="submit" 
                 form="add-room-form" 
-                className="primary" 
+                className="p-btn-primary" 
                 disabled={isSaving}
               >
-                <i className="fas fa-save"></i> {isSaving ? (isEditMode ? 'Updating...' : 'Saving...') : (isEditMode ? 'Update Room' : 'Save Room')}
+                {isSaving ? (
+                  <>
+                    <i className="fas fa-spinner fa-spin"></i>
+                    {isEditMode ? 'Updating...' : 'Creating...'}
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-save"></i>
+                    {isEditMode ? 'Save Changes' : 'Create Room'}
+                  </>
+                )}
               </button>
             </div>
           </div>
         </div>
       )}
 
-    {/* Alert Modal */}
-    {showAlertModal && (
-      <div className="alert-modal-overlay" onClick={() => setShowAlertModal(false)}>
-        <div className={`alert-modal alert-modal-${alertType}`} onClick={(e) => e.stopPropagation()}>
-          <div className="alert-modal-icon">
-            <i className={`fas fa-${alertType === 'success' ? 'check-circle' : 'exclamation-circle'}`}></i>
+      {/* Alert Modal */}
+      {showAlertModal && (
+        <div className="modal-overlay active" onClick={() => setShowAlertModal(false)}>
+          <div className={`modal-content modal-premium-compact animate-in alert-${alertType}`} onClick={(e) => e.stopPropagation()}>
+            <div className="modal-body-premium">
+              <div className={`p-verify-icon alert-icon-${alertType}`}>
+                <i className={`fas fa-${alertType === 'success' ? 'check-circle' : 'exclamation-circle'}`}></i>
+              </div>
+              <h3 className="alert-title">{alertType === 'success' ? 'Operation Successful' : 'Error Occurred'}</h3>
+              <p className="p-verify-text">{alertMessage}</p>
+              <button 
+                className="p-btn-primary full-width"
+                onClick={() => setShowAlertModal(false)}
+              >
+                Continue
+              </button>
+            </div>
           </div>
-          <div className="alert-modal-content">
-            <h3>{alertType === 'success' ? 'Success!' : 'Error'}</h3>
-            <p>{alertMessage}</p>
-          </div>
-          <button 
-            className="alert-modal-close"
-            onClick={() => setShowAlertModal(false)}
-            aria-label="Close alert"
-          >
-            <i className="fas fa-times"></i>
-          </button>
         </div>
-      </div>
-    )}
+      )}
     </div>
   )
 }

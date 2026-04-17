@@ -76,7 +76,7 @@ export const getReservationWindow = (booking) => {
   }
 }
 
-export const isSettledPaymentStatus = (status = '') => ['confirmed', 'paid'].includes(String(status).trim().toLowerCase())
+export const isSettledPaymentStatus = (status = '') => String(status).trim().toLowerCase() === 'confirmed'
 
 export const shouldAutoCancelReservation = (booking, now = new Date()) => {
   const { startsAt } = getReservationWindow(booking)
@@ -111,6 +111,14 @@ export const getResolvedBookingStatus = (booking, now = new Date()) => (
 )
 
 export const getReservationPhase = (booking, now = new Date()) => {
+  // If booking is already cancelled (by payment status or booking status), always show cancelled
+  const paymentStatus = String(booking?.paymentStatus || '').trim().toLowerCase()
+  const bookingStatus = String(booking?.bookingStatus || '').trim().toLowerCase()
+  
+  if (paymentStatus === 'cancelled' || bookingStatus === 'cancelled') {
+    return 'cancelled'
+  }
+
   if (shouldAutoCancelReservation(booking, now)) {
     return 'cancelled'
   }

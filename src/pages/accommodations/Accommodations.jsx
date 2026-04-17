@@ -46,7 +46,9 @@ const Accommodations = () => {
           amenities: Array.isArray(room.features) ? room.features : [],
           capacity: room.capacity || 'N/A',
           size: room.size || '',
-          price: `PHP ${Number(room.price || 0).toLocaleString('en-PH')} / night`
+          price: `PHP ${Number(room.price || 0).toLocaleString('en-PH')} / night`,
+          popular: room.popular || false,
+          status: room.status || 'available'
         }))
 
         mappedRooms.sort((a, b) => a.name.localeCompare(b.name))
@@ -105,6 +107,12 @@ const Accommodations = () => {
                 <div key={room.id} className="room-card" onClick={() => setSelectedRoom(room)}>
                   <div className="room-image-wrapper">
                     <img src={room.image} alt={room.name} />
+                    {(room.popular || room.status === 'maintenance') && (
+                      <div className="room-badges">
+                        {room.popular && <span className="badge popular">Popular</span>}
+                        {room.status === 'maintenance' && <span className="badge maintenance">Maintenance</span>}
+                      </div>
+                    )}
                     <div className="room-overlay">
                       <span className="view-details-btn">View Details</span>
                     </div>
@@ -172,12 +180,28 @@ const Accommodations = () => {
                   </div>
                 </div>
 
+                {selectedRoom.status === 'maintenance' && (
+                  <div className="maintenance-alert">
+                    <i className="fas fa-exclamation-circle"></i>
+                    <div className="maintenance-alert-content">
+                      <h4>Under Maintenance</h4>
+                      <p>This room is currently unavailable. Please check back soon or contact us for alternative options.</p>
+                    </div>
+                  </div>
+                )}
+
                 <div className="modal-footer">
                   <div className="modal-price">
                     <span className="price-label">Starting from</span>
                     <span className="price-value">{selectedRoom.price}</span>
                   </div>
-                  <Link to={`/booking?room=${selectedRoom.id}`} className="book-room-btn">Book Now</Link>
+                  {selectedRoom.status === 'maintenance' ? (
+                    <button className="book-room-btn disabled" disabled>
+                      <i className="fas fa-tools"></i> Under Maintenance
+                    </button>
+                  ) : (
+                    <Link to={`/booking?room=${selectedRoom.id}`} className="book-room-btn">Book Now</Link>
+                  )}
                 </div>
               </div>
             </div>

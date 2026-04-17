@@ -38,7 +38,8 @@ export const AdminAuthProvider = ({ children }) => {
         setUser(session)
         setIsAdmin(session?.role === 'admin')
 
-        if (session && session.role !== 'admin') {
+        // Allow both admin and moderator roles to access admin area
+        if (session && !['admin', 'moderator'].includes(session.role)) {
           clearAdminSession()
         }
       } catch (error) {

@@ -165,10 +165,6 @@ const Location = () => {
               <a href="/booking" className="cta-book-btn">
                 Book Now <i className="fas fa-arrow-right"></i>
               </a>
-              <a href="tel:+639399338315" className="cta-call-btn">
-                <i className="fas fa-phone-alt"></i>
-                Call Us
-              </a>
             </div>
           </div>
         </div>

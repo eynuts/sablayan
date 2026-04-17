@@ -512,7 +512,7 @@
 }
 
 .section-tag {
-  color: #d94e28;
+  color: #d94e28 !important;
   text-transform: uppercase;
   font-weight: 700;
   font-size: 0.8rem;
@@ -524,13 +524,13 @@
 .amenities-header h2 {
   font-family: 'Playfair Display', serif;
   font-size: 3rem;
-  color: #122b36;
+  color: #122b36 !important;
   margin-bottom: 1.5rem;
 }
 
 .amenities-header p {
   font-size: 1.1rem;
-  color: #666;
+  color: #333 !important;
   max-width: 600px;
   margin: 0 auto;
 }

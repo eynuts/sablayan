@@ -153,6 +153,37 @@
   opacity: 1;
 }
 
+.room-badges {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  z-index: 2;
+}
+
+.room-badges .badge {
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.room-badges .badge.popular {
+  background: rgba(217, 78, 40, 0.9);
+  color: white;
+}
+
+.room-badges .badge.maintenance {
+  background: rgba(239, 68, 68, 0.9);
+  color: white;
+}
+
 .view-details-btn {
   background: white;
   color: #122b36;
@@ -440,6 +471,51 @@
   background: #bf3f1d;
   transform: translateY(-3px);
   box-shadow: 0 12px 35px rgba(217, 78, 40, 0.4);
+}
+
+.book-room-btn.disabled {
+  background: #cbd5e1;
+  color: #64748b;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.book-room-btn.disabled:hover {
+  background: #cbd5e1;
+  transform: none;
+}
+
+.maintenance-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: #fef3c7;
+  border: 2px solid #fcd34d;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+}
+
+.maintenance-alert i {
+  font-size: 1.5rem;
+  color: #d97706;
+  flex-shrink: 0;
+  margin-top: 0.25rem;
+}
+
+.maintenance-alert-content h4 {
+  margin: 0 0 0.5rem 0;
+  color: #d97706;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.maintenance-alert-content p {
+  margin: 0;
+  color: #92400e;
+  font-size: 0.95rem;
+  line-height: 1.5;
 }
 
 /* Resort amenities feature cards section */

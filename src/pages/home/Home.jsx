@@ -173,7 +173,10 @@ const Home = () => {
                   </div>
                 </div>
                 <div className="card-content-bottom">
-                  <button className="interactive-explore-btn">
+                  <button 
+                    className="interactive-explore-btn"
+                    onClick={() => navigate(exp.link)}
+                  >
                     <span>Explore & Book</span>
                     <i className="fas fa-arrow-right"></i>
                   </button>

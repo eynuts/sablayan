@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../AuthContext'
+import { useNotifications } from '../NotificationContext'
 import { getAuthErrorMessage } from '../firebase'
 import './Navbar.css'
 
@@ -10,6 +11,7 @@ const Navbar = () => {
   const [scrolled, setScrolled] = useState(false) // Tracks if page has been scrolled for styling
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false) // Controls mobile menu visibility
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false) // Controls user dropdown menu visibility
+  const [isNotificationPanelOpen, setIsNotificationPanelOpen] = useState(false) // Controls notification panel visibility
 
   // State for authentication form
   const [firstName, setFirstName] = useState('') // First name input for signup
@@ -22,9 +24,11 @@ const Navbar = () => {
 
   // Hooks and context
   const { user, loginWithEmail, signUpWithEmail, logout } = useAuth() // Authentication context
+  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications() // Notifications context
   const location = useLocation() // Current route location
   const userMenuRef = useRef(null) // Ref for desktop user menu container
   const mobileUserMenuRef = useRef(null) // Ref for mobile user menu container
+  const notificationRef = useRef(null) // Ref for notification panel container
 
   // Helper function to extract first name from display name or email
   const getFirstName = (name, fallbackEmail = '') => {
@@ -68,9 +72,13 @@ const Navbar = () => {
     const handleClickOutside = (event) => {
       const isOutsideDesktop = userMenuRef.current && !userMenuRef.current.contains(event.target);
       const isOutsideMobile = mobileUserMenuRef.current && !mobileUserMenuRef.current.contains(event.target);
+      const isOutsideNotification = notificationRef.current && !notificationRef.current.contains(event.target);
 
       if (isOutsideDesktop && isOutsideMobile) {
         setIsUserMenuOpen(false)
+      }
+      if (isOutsideNotification) {
+        setIsNotificationPanelOpen(false)
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
@@ -99,6 +107,14 @@ const Navbar = () => {
   // Toggle user dropdown menu
   const toggleUserMenu = () => {
     setIsUserMenuOpen(!isUserMenuOpen)
+  }
+
+  // Toggle notification panel
+  const toggleNotificationPanel = () => {
+    setIsNotificationPanelOpen(!isNotificationPanelOpen)
+    if (!isNotificationPanelOpen && unreadCount > 0) {
+      markAllAsRead()
+    }
   }
 
   // Handle email-based authentication (login/signup)
@@ -159,10 +175,72 @@ const Navbar = () => {
 
         {/* Right-side actions: notifications and user menu */}
         <div className="navbar-actions">
-          <button className="nav-icon-btn notification-btn">
-            <i className="fas fa-bell"></i>
-            <span className="notification-dot"></span>
-          </button>
+          <div className="notification-container" ref={notificationRef}>
+            <button 
+              className="nav-icon-btn notification-btn"
+              onClick={toggleNotificationPanel}
+              title="Notifications"
+            >
+              <i className="fas fa-bell"></i>
+              {user && unreadCount > 0 && (
+                <span className="notification-badge">{unreadCount > 9 ? '9+' : unreadCount}</span>
+              )}
+            </button>
+
+            {/* Notification Panel */}
+            {user && isNotificationPanelOpen && (
+              <div className="notification-panel">
+                <div className="notification-panel-header">
+                  <h3>Notifications</h3>
+                  {unreadCount > 0 && (
+                    <button 
+                      className="mark-all-read-btn"
+                      onClick={markAllAsRead}
+                      title="Mark all as read"
+                    >
+                      <i className="fas fa-check"></i> Mark all as read
+                    </button>
+                  )}
+                </div>
+
+                <div className="notification-panel-content">
+                  {notifications.length === 0 ? (
+                    <div className="notification-empty">
+                      <i className="fas fa-inbox"></i>
+                      <p>No notifications yet</p>
+                    </div>
+                  ) : (
+                    <div className="notification-list">
+                      {notifications.map((notification) => (
+                        <div 
+                          key={notification.id}
+                          className={`notification-item ${notification.read ? 'read' : 'unread'}`}
+                          onClick={() => markAsRead(notification.id)}
+                        >
+                          <div className="notification-icon">
+                            {notification.type === 'booking' && <i className="fas fa-calendar-check"></i>}
+                            {notification.type === 'cancel' && <i className="fas fa-calendar-times"></i>}
+                            {notification.type === 'approval' && <i className="fas fa-check-circle"></i>}
+                            {notification.type === 'admin_action' && <i className="fas fa-tools"></i>}
+                            {notification.type === 'payment' && <i className="fas fa-credit-card"></i>}
+                            {!['booking', 'cancel', 'approval', 'admin_action', 'payment'].includes(notification.type) && <i className="fas fa-bell"></i>}
+                          </div>
+                          <div className="notification-content">
+                            <h4>{notification.title}</h4>
+                            <p>{notification.message}</p>
+                            <span className="notification-time">
+                              {new Date(notification.timestamp).toLocaleDateString()}
+                            </span>
+                          </div>
+                          {!notification.read && <span className="unread-dot"></span>}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* User menu - authenticated vs unauthenticated */}
           {user ? (
