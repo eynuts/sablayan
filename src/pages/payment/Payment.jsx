@@ -281,6 +281,10 @@ const Payment = () => {
                         <span className="detail-label">Check-out Time</span>
                         <span className="detail-value">{formatPolicyTime(CHECK_OUT_TIME)}</span>
                       </div>
+                      <div className="detail-item">
+                        <span className="detail-label">Duration</span>
+                        <span className="detail-value">{bookingData.nights || 0} night(s)</span>
+                      </div>
                     </>
                   ) : (
                     <>
@@ -300,57 +304,94 @@ const Payment = () => {
                         <span className="detail-label">Duration</span>
                         <span className="detail-value">15-20 minutes</span>
                       </div>
-                      <div className="detail-item">
-                        <span className="detail-label">Number of Guests</span>
-                        <span className="detail-value">{bookingData.guests} guest(s)</span>
-                      </div>
                     </>
                   )}
-                  {bookingData.type !== 'room' && (
-                    <>
-                      <div className="detail-item">
-                        <span className="detail-label">Regular Guests</span>
-                        <span className="detail-value">{bookingData.regularGuests || 0}</span>
-                      </div>
-                      <div className="detail-item">
-                        <span className="detail-label">Senior Guests</span>
-                        <span className="detail-value">{bookingData.seniorGuests || 0} ({bookingData.seniorDiscountPercent || 0}% off)</span>
-                      </div>
-                      <div className="detail-item">
-                        <span className="detail-label">Child Guests</span>
-                        <span className="detail-value">{bookingData.childGuests || 0} ({bookingData.childDiscountPercent || 0}% off)</span>
-                      </div>
-                      <div className="detail-item">
-                        <span className="detail-label">PWD Guests</span>
-                        <span className="detail-value">{bookingData.pwdGuests || 0} ({bookingData.pwdDiscountPercent || 0}% off)</span>
-                      </div>
-                    </>
-                  )}
+                  <div className="detail-item">
+                    <span className="detail-label">Number of Guests</span>
+                    <span className="detail-value">{bookingData.guests} guest(s)</span>
+                  </div>
+                  <div className="detail-item">
+                    <span className="detail-label">Regular Guests</span>
+                    <span className="detail-value">{bookingData.regularGuests || 0}</span>
+                  </div>
+                  <div className="detail-item">
+                    <span className="detail-label">Matanda</span>
+                    <span className="detail-value">{bookingData.seniorGuests || 0} ({bookingData.seniorDiscountPercent || 0}% off)</span>
+                  </div>
+                  <div className="detail-item">
+                    <span className="detail-label">Bata</span>
+                    <span className="detail-value">{bookingData.childGuests || 0} ({bookingData.childDiscountPercent || 0}% off)</span>
+                  </div>
+                  <div className="detail-item">
+                    <span className="detail-label">PWD</span>
+                    <span className="detail-value">{bookingData.pwdGuests || 0} ({bookingData.pwdDiscountPercent || 0}% off)</span>
+                  </div>
                 </div>
               </div>
 
               <div className="confirmation-section confirmation-pricing">
                 <h3><i className="fas fa-tag"></i> Payment Summary</h3>
                 <div className="pricing-details">
-                  {bookingData.type === 'zipline' && (
-                    <>
-                      <div className="pricing-row">
-                        <span>Base Amount</span>
-                        <span>₱{Number(bookingData.baseAmount || 0).toLocaleString()}</span>
+                  <div className="pricing-computation-box">
+                    <p className="computation-title"><i className="fas fa-calculator"></i> Computation Details</p>
+                    <div className="computation-step">
+                      <span>Base Amount</span>
+                      <span className="computation-math">
+                        {bookingData.type === 'room' ? (
+                          `₱${(Number(bookingData.room?.price) || 0).toLocaleString()} × ${bookingData.guests} guests × ${bookingData.nights || 0} nights = ₱${Number(bookingData.baseAmount || 0).toLocaleString()}`
+                        ) : (
+                          `₱${(Number(bookingData.activity?.price) || 0).toLocaleString()} × ${bookingData.guests} guests = ₱${Number(bookingData.baseAmount || 0).toLocaleString()}`
+                        )}
+                      </span>
+                    </div>
+                    {(Number(bookingData.discountAmount) > 0) && (
+                      <div className="computation-step">
+                        <span>Discounts Applied</span>
+                        <div className="computation-discounts">
+                          {Number(bookingData.seniorGuests) > 0 && (
+                            <span className="computation-math indent">
+                              Matanda: ₱{(bookingData.type === 'room' ? (Number(bookingData.room?.price) || 0) * (bookingData.nights || 0) * bookingData.seniorGuests : (Number(bookingData.activity?.price) || 0) * bookingData.seniorGuests).toLocaleString()} × {bookingData.seniorDiscountPercent}% = ₱{Number(bookingData.seniorDiscountAmount || 0).toLocaleString()}
+                            </span>
+                          )}
+                          {Number(bookingData.childGuests) > 0 && (
+                            <span className="computation-math indent">
+                              Bata: ₱{(bookingData.type === 'room' ? (Number(bookingData.room?.price) || 0) * (bookingData.nights || 0) * bookingData.childGuests : (Number(bookingData.activity?.price) || 0) * bookingData.childGuests).toLocaleString()} × {bookingData.childDiscountPercent}% = ₱{Number(bookingData.childDiscountAmount || 0).toLocaleString()}
+                            </span>
+                          )}
+                          {Number(bookingData.pwdGuests) > 0 && (
+                            <span className="computation-math indent">
+                              PWD: ₱{(bookingData.type === 'room' ? (Number(bookingData.room?.price) || 0) * (bookingData.nights || 0) * bookingData.pwdGuests : (Number(bookingData.activity?.price) || 0) * bookingData.pwdGuests).toLocaleString()} × {bookingData.pwdDiscountPercent}% = ₱{Number(bookingData.pwdDiscountAmount || 0).toLocaleString()}
+                            </span>
+                          )}
+                          <span className="computation-math indent total-discount-math">
+                            Total Discount: ₱{Number(bookingData.discountAmount || 0).toLocaleString()}
+                          </span>
+                        </div>
                       </div>
-                      <div className="pricing-row">
-                        <span>Total Discount</span>
-                        <span className="discount">-₱{Number(bookingData.discountAmount || 0).toLocaleString()}</span>
-                      </div>
-                      <div className="pricing-row">
-                        <span>Final Amount</span>
-                        <span>₱{Number(bookingData.totalAmount || 0).toLocaleString()}</span>
-                      </div>
-                    </>
-                  )}
+                    )}
+                    <div className="computation-step computation-final">
+                      <span>Final Amount</span>
+                      <span className="computation-math">
+                        ₱{Number(bookingData.baseAmount || 0).toLocaleString()} (Base) - ₱{Number(bookingData.discountAmount || 0).toLocaleString()} (Discount) = ₱{Number(bookingData.totalAmount || 0).toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="pricing-row">
+                    <span>Base Amount</span>
+                    <span>₱{Number(bookingData.baseAmount || 0).toLocaleString()}</span>
+                  </div>
+                  <div className="pricing-row">
+                    <span>Total Discount</span>
+                    <span className="discount">-₱{Number(bookingData.discountAmount || 0).toLocaleString()}</span>
+                  </div>
+                  <div className="pricing-row">
+                    <span>Final Amount</span>
+                    <span>₱{Number(bookingData.totalAmount || 0).toLocaleString()}</span>
+                  </div>
                   <div className="pricing-row pricing-highlight">
                     <span>Deposit (50%)</span>
-                    <span>₱{bookingData.depositAmount?.toLocaleString()}</span>
+                    <span>₱{bookingData.totalAmount?.toLocaleString()} ÷ 2 = ₱{bookingData.depositAmount?.toLocaleString()}</span>
                   </div>
                   <div className="pricing-row pricing-reference">
                     <span>Payment Method</span>
@@ -536,6 +577,10 @@ const Payment = () => {
                         <span>Check-out Time</span>
                         <span>{formatPolicyTime(CHECK_OUT_TIME)}</span>
                       </div>
+                      <div className="detail-row">
+                        <span>Duration</span>
+                        <span>{bookingData.nights || 0} night(s)</span>
+                      </div>
                     </>
                   ) : (
                     <>
@@ -555,45 +600,96 @@ const Payment = () => {
                         <span>Duration</span>
                         <span>15-20 minutes</span>
                       </div>
-                      <div className="detail-row">
-                        <span>Regular Guests</span>
-                        <span>{bookingData.regularGuests || 0}</span>
-                      </div>
-                      <div className="detail-row">
-                        <span>Matanda</span>
-                        <span>{bookingData.seniorGuests || 0} ({bookingData.seniorDiscountPercent || 0}% off)</span>
-                      </div>
-                      <div className="detail-row">
-                        <span>Bata</span>
-                        <span>{bookingData.childGuests || 0} ({bookingData.childDiscountPercent || 0}% off)</span>
-                      </div>
-                      <div className="detail-row">
-                        <span>PWD</span>
-                        <span>{bookingData.pwdGuests || 0} ({bookingData.pwdDiscountPercent || 0}% off)</span>
-                      </div>
-                      <div className="detail-row">
-                        <span>Base Amount</span>
-                        <span>₱{Number(bookingData.baseAmount || 0).toLocaleString()}</span>
-                      </div>
-                      <div className="detail-row">
-                        <span>Total Discount</span>
-                        <span>-₱{Number(bookingData.discountAmount || 0).toLocaleString()}</span>
-                      </div>
                     </>
                   )}
                   <div className="detail-row">
                     <span>Guests</span>
                     <span>{bookingData.guests} guest(s)</span>
                   </div>
-                  {bookingData.type === 'zipline' && (
-                    <div className="detail-row">
-                      <span>Final Amount</span>
-                      <span>₱{Number(bookingData.totalAmount || 0).toLocaleString()}</span>
+                  <div className="detail-row">
+                    <span>Regular Guests</span>
+                    <span>{bookingData.regularGuests || 0}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span>Matanda</span>
+                    <span>{bookingData.seniorGuests || 0} ({bookingData.seniorDiscountPercent || 0}% off)</span>
+                  </div>
+                  <div className="detail-row">
+                    <span>Bata</span>
+                    <span>{bookingData.childGuests || 0} ({bookingData.childDiscountPercent || 0}% off)</span>
+                  </div>
+                  <div className="detail-row">
+                    <span>PWD</span>
+                    <span>{bookingData.pwdGuests || 0} ({bookingData.pwdDiscountPercent || 0}% off)</span>
+                  </div>
+                  <div className="detail-row">
+                    <span>Base Amount</span>
+                    <span>₱{Number(bookingData.baseAmount || 0).toLocaleString()}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span>Total Discount</span>
+                    <span className="discount">-₱{Number(bookingData.discountAmount || 0).toLocaleString()}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span>Final Amount</span>
+                    <span>₱{Number(bookingData.totalAmount || 0).toLocaleString()}</span>
+                  </div>
+                  
+                  <div className="pricing-computation-box small">
+                    <p className="computation-title">How is this computed?</p>
+                    <div className="computation-step">
+                      <span>Base:</span>
+                      <span className="computation-math">
+                        {bookingData.type === 'room' ? (
+                          `₱${(Number(bookingData.room?.price) || 0).toLocaleString()} × ${bookingData.guests} pax × ${bookingData.nights || 0} nights = ₱${Number(bookingData.baseAmount || 0).toLocaleString()}`
+                        ) : (
+                          `₱${(Number(bookingData.activity?.price) || 0).toLocaleString()} × ${bookingData.guests} pax = ₱${Number(bookingData.baseAmount || 0).toLocaleString()}`
+                        )}
+                      </span>
                     </div>
-                  )}
+                    {Number(bookingData.discountAmount) > 0 ? (
+                      <div className="computation-step">
+                        <span>Discount:</span>
+                        <div className="computation-discounts">
+                          {Number(bookingData.seniorGuests) > 0 && (
+                            <span className="computation-math indent">
+                              Matanda: ₱{(bookingData.type === 'room' ? (Number(bookingData.room?.price) || 0) * (bookingData.nights || 0) * bookingData.seniorGuests : (Number(bookingData.activity?.price) || 0) * bookingData.seniorGuests).toLocaleString()} × {bookingData.seniorDiscountPercent}% = ₱{Number(bookingData.seniorDiscountAmount || 0).toLocaleString()}
+                            </span>
+                          )}
+                          {Number(bookingData.childGuests) > 0 && (
+                            <span className="computation-math indent">
+                              Bata: ₱{(bookingData.type === 'room' ? (Number(bookingData.room?.price) || 0) * (bookingData.nights || 0) * bookingData.childGuests : (Number(bookingData.activity?.price) || 0) * bookingData.childGuests).toLocaleString()} × {bookingData.childDiscountPercent}% = ₱{Number(bookingData.childDiscountAmount || 0).toLocaleString()}
+                            </span>
+                          )}
+                          {Number(bookingData.pwdGuests) > 0 && (
+                            <span className="computation-math indent">
+                              PWD: ₱{(bookingData.type === 'room' ? (Number(bookingData.room?.price) || 0) * (bookingData.nights || 0) * bookingData.pwdGuests : (Number(bookingData.activity?.price) || 0) * bookingData.pwdGuests).toLocaleString()} × {bookingData.pwdDiscountPercent}% = ₱{Number(bookingData.pwdDiscountAmount || 0).toLocaleString()}
+                            </span>
+                          )}
+                          <span className="computation-math indent total-discount-math">
+                            Sum of applied Matanda/Bata/PWD discounts = ₱{Number(bookingData.discountAmount || 0).toLocaleString()}
+                          </span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="computation-step">
+                        <span>Discount:</span>
+                        <span className="computation-math">
+                          No discounts applied = ₱0
+                        </span>
+                      </div>
+                    )}
+                    <div className="computation-step">
+                      <span>Total:</span>
+                      <span className="computation-math">
+                        ₱{Number(bookingData.baseAmount || 0).toLocaleString()} (Base) - ₱{Number(bookingData.discountAmount || 0).toLocaleString()} (Discount) = ₱{Number(bookingData.totalAmount || 0).toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+
                   <div className="detail-row total">
                     <span>Deposit Amount (50%)</span>
-                    <span>₱{bookingData.depositAmount?.toLocaleString()}</span>
+                    <span>₱{bookingData.totalAmount?.toLocaleString()} ÷ 2 = ₱{bookingData.depositAmount?.toLocaleString()}</span>
                   </div>
                 </div>
               </div>

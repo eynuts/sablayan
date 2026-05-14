@@ -1335,6 +1335,92 @@
   font-size: 1.15rem;
 }
 
+.pricing-computation-box {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  border: 1px dashed #cbd5e1;
+}
+
+.pricing-computation-box.small {
+  margin-top: 1rem;
+  margin-bottom: 0;
+  padding: 1rem;
+}
+
+.computation-title {
+  font-weight: 600;
+  color: #475569;
+  margin: 0 0 1rem 0;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.computation-step {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 0.85rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.computation-step:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.computation-step > span:first-child {
+  color: #64748b;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.computation-math {
+  font-family: 'Courier New', Courier, monospace;
+  color: #0f172a;
+  font-size: 0.9rem;
+  background: white;
+  padding: 0.5rem;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  display: block;
+}
+
+.computation-discounts {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.computation-math.indent {
+  margin-left: 1rem;
+  border-left: 3px solid #f87171;
+  color: #b91c1c;
+}
+
+.total-discount-math {
+  margin-top: 0.5rem;
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+.computation-final .computation-math {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #1e3a8a;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
 .pricing-row.pricing-reference {
   padding-top: 1rem;
   border-top: 1px solid rgba(191, 219, 254, 0.3);
